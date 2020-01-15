@@ -1,0 +1,182 @@
+resources:
+- repo: self
+  clean: true
+
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - template.json
+    - ansible/*
+
+pr:
+- master
+
+variables:
+- group: azure-creds
+- group: vault-creds
+- group: consul-creds
+- group: windows-creds
+
+- name: project
+  value: 'ere'
+- name: environment
+  value: 'sbx'
+
+- name: azureSubscription
+  value: 'Pay-As-You-Go (b31bc8ae-8938-41f1-b0b2-f707d811d596)'
+- name: azureTenantId
+  value: 'cc3dd0a3-a052-458b-bf22-9f1883bf2105'
+- name: azureSubscriptionId
+  value: 'b31bc8ae-8938-41f1-b0b2-f707d811d596'
+
+- name: packerVnetResourceGroupName
+  value: 'packer-vnet-rg'
+- name: packerVnetName
+  value: 'packer-vnet'
+- name: packerVnetSubnetName
+  value: 'packer-vnet-subnet1'
+
+- name: packerImagesResourceGroupName
+  value: 'packer-images-rg'
+- name: packerImageName
+  value: 'packer-image'
+
+- name: prodVnetResourceGroupName
+  value: 'prod-vnet-rg'
+- name: prodVnetName
+  value: 'prod-vnet'
+- name: prodVnetSubnetName
+  value: 'prod-vnet-subnet1'
+- name: prodVnetSubnetId
+  value: '/subscriptions/b31bc8ae-8938-41f1-b0b2-f707d811d596/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)'
+- name: prodVmResourceGroupName
+  value: 'prod-vm-rg'
+- name: prodVmName
+  value: 'prod-vm'
+- name: prodVmRegion
+  value: 'East US'
+- name: packerImageId
+  value: '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/$(packerImageName)'
+
+stages:
+- stage: Build
+  jobs:
+  - job: prv
+    condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+    pool:
+      name: Self-Hosted
+    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+    steps:
+    - checkout: self
+      clean: true
+      persistCredentials: false
+      submodules: false
+    - bash: |
+        echo "##vso[task.setvariable variable=VAULT_TOKEN]$VAULT_TOKEN_SEC"
+      displayName: 'Export ADOS Secret variables for Vault'
+      env:
+        VAULT_TOKEN_SEC: $(VAULT_TOKEN_SEC)
+    - task: riezebosch.Packer.Packer.Packer@1
+      displayName: 'Build image'
+      inputs:
+        connectedServiceType: 'azure'
+        azureSubscription: $(azureSubscription)
+        templatePath: template.json
+        command: 'build'
+        force: true
+        variables: |
+          project=$(project)
+          environment=$(environment)
+          azure_client_id=$(azureClientId)
+          azure_client_secret=$(azureClientSecret)
+          azure_tenant_id=$(azureTenantId)
+          azure_subscription_id=$(azureSubscriptionId)
+          packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
+          packer_vnet_name=$(packerVnetName)
+          packer_vnet_subnet_name=$(packerVnetSubnetName)
+          packer_images_resource_group_name=$(packerImagesResourceGroupName)
+          packer_image_name=$(packerImageName)
+          ansible_user=$(ANSIBLE_USER)
+          ansible_user_password=$(ANSIBLE_USER_PASS_SEC)
+    - task: AzureCLI@1
+      displayName: 'Delete image'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptLocation: inlineScript
+        inlineScript: 'az image delete --resource-group $(packerImagesResourceGroupName) --name $(packerImageName)'
+        failOnStandardError: true
+
+
+  - job: build
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    pool:
+      name: Self-Hosted
+    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+    steps:
+    - checkout: self
+      clean: true
+      persistCredentials: false
+      submodules: false
+    - bash: |
+        echo "##vso[task.setvariable variable=VAULT_TOKEN]$VAULT_TOKEN_SEC"
+      displayName: 'Export ADOS Secret var for Vault'
+      env:
+        VAULT_TOKEN_SEC: $(VAULT_TOKEN_SEC)
+    - task: riezebosch.Packer.Packer.Packer@1
+      displayName: 'Build image'
+      inputs:
+        connectedServiceType: 'azure'
+        azureSubscription: $(azureSubscription)
+        templatePath: template.json
+        command: 'build'
+        force: true
+        variables: |
+          project=$(project)
+          environment=$(environment)
+          azure_client_id=$(azureClientId)
+          azure_client_secret=$(azureClientSecret)
+          azure_tenant_id=$(azureTenantId)
+          azure_subscription_id=$(azureSubscriptionId)
+          packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
+          packer_vnet_name=$(packerVnetName)
+          packer_vnet_subnet_name=$(packerVnetSubnetName)
+          packer_images_resource_group_name=$(packerImagesResourceGroupName)
+          packer_image_name=$(packerImageName)
+          ansible_user=$(ANSIBLE_USER)
+          ansible_user_password=$(ANSIBLE_USER_PASS_SEC)
+
+- stage: Deploy
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy
+    pool:
+      name: 'Self-Hosted'
+    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+    environment: 'sbx'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureCLI@1
+            displayName: 'Create VM'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              scriptLocation: inlineScript
+              inlineScript: |
+                az vm create --resource-group $(prodVmResourceGroupName) --name $(prodVmName) --image $(packerImageId) --location "$(prodVmRegion)" --subnet $(prodVnetSubnetId) --public-ip-address "" --admin-username $(ANSIBLE_USER) --admin-password $(ANSIBLE_USER_PASS_SEC) --tags 'project=$(project)' 'environment=$(environment)'
+                az vm run-command invoke --command-id RunPowerShellScript --resource-group $(prodVmResourceGroupName) --name $(prodVmName) --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
+                VM_PR_IP=$(az vm list-ip-addresses --resource-group $(prodVmResourceGroupName) --name $(prodVmName) --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+                echo "##vso[task.setvariable variable=VM_PR_IP]$VM_PR_IP"
+              failOnStandardError: true
+
+          - bash: |
+              printf "[all]\n$VM_PR_IP" > hosts
+              cat hosts
+            displayName: 'Create Ansible hosts file'
+
+          - bash: |
+              ansible-playbook -vvvv -i hosts ansible/release-playbook.yml --extra-vars='ansible_user=$(ANSIBLE_USER) ansible_password=$(ANSIBLE_USER_PASS_SEC) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore ansible_shell_type=powershell ansible_shell_executable=None'
+            displayName: 'Execute Ansible provisioner'
