@@ -13,9 +13,7 @@
         "packer_image_name": "",
         "ansible_user": "",
         "ansible_user_password": "",
-        "var1": "var_from_packer",
-        "var2": "{{ vault `/secret/data/var2` `var2`}}",
-        "var3": "{{ consul_key `var3` }}"
+        "ansible_extra_vars": ""
     },
     "sensitive-variables": [
         "azure_client_id",
@@ -88,7 +86,7 @@
         },
         {
             "type": "shell-local",
-            "command": "ansible-playbook -vvvv -i hosts ansible/build-playbook.yml --extra-vars='ansible_user={{ user `ansible_user` }} ansible_password={{ user `ansible_user_password` }} ansible_connection=winrm ansible_winrm_server_cert_validation=ignore ansible_shell_type=powershell ansible_shell_executable=None var1={{ user `var1` }} var2={{ user `var2` }} var3={{ user `var3` }}' "
+            "command": "ansible-playbook -vvvv -i hosts ansible/{{user `packer_image_name`}}/build-playbook.yml --extra-vars={{user `ansible_extra_vars`}}"
         },
         {
             "type": "shell-local",
