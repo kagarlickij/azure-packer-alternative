@@ -53,7 +53,10 @@ Environment in ADOS Pipelines will be created automatically by Pipeline
 # Azure DevOps pipeline
 Pipeline supports Pull requests verification and VM image build and deploy based on commit to mainline (`master` branch)  
 Azure DevOps agent must have access to the virtual network that is used for VM image build  
-Azure DevOps pipeline is executed in Docker [kagarlickij/packer-ansible-azure-docker-runtime:2.0.0](https://hub.docker.com/repository/registry-1.docker.io/kagarlickij/packer-ansible-azure-docker-runtime/builds/433e143e-9a1f-445d-b8df-31477e3600bb) runtime with preinstalled Packer, Ansible, Azure CLI and necessary Python packages
+Azure DevOps pipeline is executed in Docker [kagarlickij/packer-ansible-azure-docker-runtime:2.0.0](https://hub.docker.com/repository/registry-1.docker.io/kagarlickij/packer-ansible-azure-docker-runtime/builds/433e143e-9a1f-445d-b8df-31477e3600bb) runtime with preinstalled Packer, Ansible, Azure CLI and necessary Python packages  
+There are a few ways to run builds in parallel, but all of them don't work:  
+1. Use multiple `builders` in template.json. It doesn't work because each VM must use dedicated provisioner
+2. Build the same template on multiple agents (VMs or Docker containers) in [parallel](https://docs.microsoft.com/en-us/azure/devops/pipelines/licensing/concurrent-jobs?view=azure-devops) always [fails](https://stackoverflow.com/questions/59864317/packer-azure-arm-fails-when-running-in-parallel )
 
 # Manual execution (CLI on local machine)
 Deprecated because of complexity with variables
