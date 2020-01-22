@@ -1,6 +1,6 @@
 | Build status  | License |
 | ------------- | ------------- |
-| [![Build Status](https://dev.azure.com/kagarlickij/packer-azure/_apis/build/status/packer-azure-ci?branchName=master)](https://dev.azure.com/kagarlickij/packer-azure/_build/latest?definitionId=8&branchName=master)  | [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)  |
+| [![Build Status](https://dev.azure.com/kagarlickij/azure-vm-packer-ansible/_apis/build/status/azure-vm-packer-ansible-ci?branchName=master)](https://dev.azure.com/kagarlickij/azure-vm-packer-ansible/_build/latest?definitionId=17&branchName=master)  | [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)  |
 
 # Task
 ## Packer (temporary) virtual machine:
