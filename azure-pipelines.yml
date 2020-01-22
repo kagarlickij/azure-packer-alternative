@@ -30,7 +30,7 @@ stages:
     displayName: 'Build VM1'
     timeoutInMinutes: 30
     pool:
-      name: Self-Hosted
+      name: 'Self-Hosted'
     container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
     variables:
     - group: azure-prod-vm1
@@ -67,8 +67,11 @@ stages:
   - job: build_vm2
     displayName: 'Build VM2'
     timeoutInMinutes: 30
+    dependsOn:
+    - build_vm1
+    condition: succeededOrFailed()
     pool:
-      name: Self-Hosted
+      name: 'Self-Hosted'
     container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
     variables:
     - group: azure-prod-vm2
@@ -105,8 +108,11 @@ stages:
   - job: build_vm3
     displayName: 'Build VM3'
     timeoutInMinutes: 30
+    dependsOn:
+    - build_vm2
+    condition: succeededOrFailed()
     pool:
-      name: Self-Hosted
+      name: 'Self-Hosted'
     container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
     variables:
     - group: azure-prod-vm3

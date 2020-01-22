@@ -53,7 +53,7 @@ Environment in ADOS Pipelines will be created automatically by Pipeline
 # Azure DevOps pipeline
 Pipeline supports Pull requests verification and VM image build and deploy based on commit to mainline (`master` branch)  
 Azure DevOps agent must have access to the virtual network that is used for VM image build  
-Azure DevOps pipeline is executed in Docker [packer-ansible-azure-docker-runtime](https://hub.docker.com/repository/docker/kagarlickij/packer-ansible-azure-docker-runtime/) runtime with preinstalled Packer, Ansible, Azure CLI and necessary Python packages
+Azure DevOps pipeline is executed in Docker [kagarlickij/packer-ansible-azure-docker-runtime:2.0.0](https://hub.docker.com/repository/registry-1.docker.io/kagarlickij/packer-ansible-azure-docker-runtime/builds/433e143e-9a1f-445d-b8df-31477e3600bb) runtime with preinstalled Packer, Ansible, Azure CLI and necessary Python packages
 
 # Manual execution (CLI on local machine)
 Deprecated because of complexity with variables
