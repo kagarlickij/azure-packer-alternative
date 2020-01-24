@@ -12,7 +12,14 @@ trigger:
     - ansible/*
 
 pr:
-- master
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - template.json
+    - ansible/*
+    - azure-pipelines.yml
 
 variables:
 - group: azure-connection
@@ -600,7 +607,7 @@ stages:
 
   - job: cleanup
     displayName: 'Cleanup'
-    dependsOn:
+    dependsOn: #TODO: Add all VMs as conditions
     - deploy_vm1
     condition: succeeded()
     timeoutInMinutes: 30
