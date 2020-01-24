@@ -452,7 +452,7 @@ stages:
 
 
 - stage: PRV
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'refs/heads/master')
+  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   variables:
   - group: ansible-build-common
   jobs:
