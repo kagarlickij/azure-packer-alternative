@@ -1,0 +1,102 @@
+parameters:
+  name: ''
+  variable_group1: ''
+  variable_group2: ''
+  vm_name: '' #prodVm1Name
+  vm_rg_name: '' #prodVm1ResourceGroupName
+  vm_kv_name: ''
+  vm_size: ''
+  vm_ip_name: '' #VM1_IP
+  ansible_extra_vars: ''
+
+jobs:
+- deployment: ${{ parameters.name }}
+  displayName: ${{ parameters.name }}
+  timeoutInMinutes: 30
+  pool:
+    name: 'Self-Hosted'
+  container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+  variables:
+  - group: ${{ parameters.variable_group1 }}
+  - group: ${{ parameters.variable_group1 }}
+  environment: 'sbx'
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: AzureCLI@1
+          inputs:
+            azureSubscription: $(azureSubscription)
+            scriptLocation: inlineScript
+            inlineScript: >
+              az vm create
+              --resource-group '${{ parameters.vm_rg_name }}'
+              --name '${{ parameters.vm_name }}'
+              --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/${{ parameters.vm_name }}'
+              --location '$(prodVmRegion)'
+              --size '${{ parameters.vm_size }}'
+              --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)'
+              --public-ip-address ''
+              --admin-username '$(ansibleUser)'
+              --admin-password '$(ansibleUserPass)'
+              --tags 'project=$(project)' 'environment=$(environment)'
+            failOnStandardError: true
+          name: 'create_vm'
+          displayName: 'Create VM'
+
+        - task: AzureCLI@1
+          inputs:
+            azureSubscription: $(azureSubscription)
+            scriptLocation: inlineScript
+            inlineScript: |
+              ${{ parameters.vm_ip_name }}=$(az vm list-ip-addresses --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+              echo "##vso[task.setvariable variable=${{ parameters.vm_ip_name }};isOutput=true]$(${{ parameters.vm_ip_name }})"
+            failOnStandardError: true
+          name: 'get_vm_ip'
+          displayName: 'Get VM IP'
+
+        - task: AzureCLI@1
+          inputs:
+            azureSubscription: $(azureSubscription)
+            scriptLocation: inlineScript
+            inlineScript: |
+              az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
+            failOnStandardError: true
+          name: 'setup_winrm'
+          displayName: 'Setup WinRM'
+
+        - bash: |
+            echo -e "[all]\n$GET_VM_IP_${{ parameters.vm_ip_name }}" > hosts
+          name: 'create_ansible_hosts'
+          displayName: 'Create Ansible hosts file'
+
+        - bash: >
+            ansible-playbook
+            -vvvv
+            -i hosts
+            ansible/${{ parameters.vm_name }}/release-playbook.yml
+            --extra-vars='
+            ansible_user=$(ansibleUser)
+            ansible_password=$(ansibleUserPass)
+            ansible_connection=winrm
+            ansible_winrm_server_cert_validation=ignore
+            ${{ parameters.ansible_extra_vars }}
+            '
+          name: 'execute_ansible'
+          displayName: 'Execute Ansible provisioner'
+
+        - task: AzureCLI@1
+          inputs:
+            azureSubscription: $(azureSubscription)
+            scriptLocation: inlineScript
+            inlineScript: |
+              az keyvault create --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_kv_name }} --location "$(prodVmRegion)" --enabled-for-disk-encryption
+              az vm encryption enable --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --disk-encryption-keyvault ${{ parameters.vm_kv_name }}
+            failOnStandardError: true
+          name: 'encrypt_vm'
+          displayName: 'Encrypt VM'
+
+        - bash: |
+            echo "##vso[task.setvariable variable=${{ parameters.vm_ip_name }};isOutput=true]$GET_VM_IP_${{ parameters.vm_ip_name }}"
+          name: 'export_ip'
+          displayName: 'Export VM1 IP address'

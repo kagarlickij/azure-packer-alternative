@@ -29,130 +29,35 @@ variables:
 - group: ansible-windows-creds
 
 stages:
-- stage: Build
-  condition: ne(variables['Build.Reason'], 'PullRequest')
-  variables:
-  - group: ansible-build-common
-  jobs:
-  - job: build_vm1
-    displayName: 'Build VM1'
-    timeoutInMinutes: 30
-    pool:
-      name: 'Self-Hosted'
-    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-    variables:
-    - group: azure-prod-vm1
-    - group: ansible-build-vm1
-    steps:
-    - checkout: self
-      clean: true
-      persistCredentials: false
-      submodules: false
-    - task: riezebosch.Packer.Packer.Packer@1
-      displayName: 'Build image'
-      inputs:
-        connectedServiceType: 'azure'
-        azureSubscription: $(azureSubscription)
-        templatePath: template.json
-        command: 'build'
-        force: true
-        variables: |
-          project=$(project)
-          environment=$(environment)
-          azure_client_id=$(azureClientId)
-          azure_client_secret=$(azureClientSecret)
-          azure_tenant_id=$(azureTenantId)
-          azure_subscription_id=$(azureSubscriptionId)
-          packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
-          packer_vnet_name=$(packerVnetName)
-          packer_vnet_subnet_name=$(packerVnetSubnetName)
-          packer_images_resource_group_name=$(packerImagesResourceGroupName)
-          packer_image_name=$(prodVm1Name)
-          ansible_user=$(ansibleUser)
-          ansible_user_password=$(ansibleUserPass)
-          ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+# - stage: Build
+#   condition: ne(variables['Build.Reason'], 'PullRequest')
+#   variables:
+#   - group: ansible-build-common
+#   jobs:
+#   - template: build-with-params.yml
+#     parameters:
+#       name: 'build_vm1'
+#       variable_group1: 'azure-prod-vm1'
+#       variable_group2: 'ansible-build-vm1'
+#       vm_name: '$(prodVm1Name)'
+#       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - job: build_vm2
-    displayName: 'Build VM2'
-    timeoutInMinutes: 30
-    dependsOn:
-    - build_vm1
-    condition: succeededOrFailed()
-    pool:
-      name: 'Self-Hosted'
-    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-    variables:
-    - group: azure-prod-vm2
-    - group: ansible-build-vm2
-    steps:
-    - checkout: self
-      clean: true
-      persistCredentials: false
-      submodules: false
-    - task: riezebosch.Packer.Packer.Packer@1
-      displayName: 'Build image'
-      inputs:
-        connectedServiceType: 'azure'
-        azureSubscription: $(azureSubscription)
-        templatePath: template.json
-        command: 'build'
-        force: true
-        variables: |
-          project=$(project)
-          environment=$(environment)
-          azure_client_id=$(azureClientId)
-          azure_client_secret=$(azureClientSecret)
-          azure_tenant_id=$(azureTenantId)
-          azure_subscription_id=$(azureSubscriptionId)
-          packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
-          packer_vnet_name=$(packerVnetName)
-          packer_vnet_subnet_name=$(packerVnetSubnetName)
-          packer_images_resource_group_name=$(packerImagesResourceGroupName)
-          packer_image_name=$(prodVm2Name)
-          ansible_user=$(ansibleUser)
-          ansible_user_password=$(ansibleUserPass)
-          ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+#   - template: build-with-params.yml
+#     parameters:
+#       name: 'build_vm2'
+#       variable_group1: 'azure-prod-vm2'
+#       variable_group2: 'ansible-build-vm2'
+#       vm_name: '$(prodVm2Name)'
+#       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - job: build_vm3
-    displayName: 'Build VM3'
-    timeoutInMinutes: 30
-    dependsOn:
-    - build_vm2
-    condition: succeededOrFailed()
-    pool:
-      name: 'Self-Hosted'
-    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-    variables:
-    - group: azure-prod-vm3
-    - group: ansible-build-vm3
-    steps:
-    - checkout: self
-      clean: true
-      persistCredentials: false
-      submodules: false
-    - task: riezebosch.Packer.Packer.Packer@1
-      displayName: 'Build image'
-      inputs:
-        connectedServiceType: 'azure'
-        azureSubscription: $(azureSubscription)
-        templatePath: template.json
-        command: 'build'
-        force: true
-        variables: |
-          project=$(project)
-          environment=$(environment)
-          azure_client_id=$(azureClientId)
-          azure_client_secret=$(azureClientSecret)
-          azure_tenant_id=$(azureTenantId)
-          azure_subscription_id=$(azureSubscriptionId)
-          packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
-          packer_vnet_name=$(packerVnetName)
-          packer_vnet_subnet_name=$(packerVnetSubnetName)
-          packer_images_resource_group_name=$(packerImagesResourceGroupName)
-          packer_image_name=$(prodVm3Name)
-          ansible_user=$(ansibleUser)
-          ansible_user_password=$(ansibleUserPass)
-          ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+#   - template: build-with-params.yml
+#     parameters:
+#       name: 'build_vm3'
+#       variable_group1: 'azure-prod-vm3'
+#       variable_group2: 'ansible-build-vm3'
+#       vm_name: '$(prodVm3Name)'
+#       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+
 
 - stage: Deploy
   condition: ne(variables['Build.Reason'], 'PullRequest')
@@ -910,7 +815,7 @@ stages:
     - deploy_vm2
     - deploy_vm3
     condition: succeeded()
-    timeoutInMinutes: 30
+    timeoutInMinutes: 60
     pool:
       name: 'Self-Hosted'
     container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
