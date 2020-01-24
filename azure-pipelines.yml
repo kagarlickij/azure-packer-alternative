@@ -624,24 +624,13 @@ stages:
       name: 'delete_rg'
       displayName: 'Delete VM1 Resource group'
 
-    # - task: AzureCLI@1
-    #   condition: succeeded()
-    #   inputs:
-    #     azureSubscription: $(azureSubscription)
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az group delete --name $(prodVm2ResourceGroupName)-prv --yes
-    #     failOnStandardError: true
-    #   name: 'delete_rg'
-    #   displayName: 'Delete VM2 Resource group'
-
-    # - task: AzureCLI@1
-    #   condition: succeeded()
-    #   inputs:
-    #     azureSubscription: $(azureSubscription)
-    #     scriptLocation: inlineScript
-    #     inlineScript: |
-    #       az group delete --name $(prodVm3ResourceGroupName)-prv --yes
-    #     failOnStandardError: true
-    #   name: 'delete_rg'
-    #   displayName: 'Delete VM3 Resource group'
+    - task: AzureCLI@1
+      condition: succeeded()
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptLocation: inlineScript
+        inlineScript: |
+          az image delete --ids '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/$(prodVm1Name)-prv'
+        failOnStandardError: true
+      name: 'delete_rg'
+      displayName: 'Delete VM1 image'
