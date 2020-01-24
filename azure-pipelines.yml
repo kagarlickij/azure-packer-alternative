@@ -463,131 +463,131 @@ stages:
   variables:
   - group: ansible-build-common
   jobs:
-  - job: build_vm1
-    displayName: 'Build VM1'
-    timeoutInMinutes: 30
-    pool:
-      name: 'Self-Hosted'
-    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-    variables:
-    - group: azure-prod-vm1
-    - group: ansible-build-vm1
-    steps:
-    - checkout: self
-      clean: true
-      persistCredentials: false
-      submodules: false
-    - task: riezebosch.Packer.Packer.Packer@1
-      displayName: 'Build image'
-      inputs:
-        connectedServiceType: 'azure'
-        azureSubscription: $(azureSubscription)
-        templatePath: template.json
-        command: 'build'
-        force: true
-        variables: |
-          project=$(project)
-          environment=$(environment)
-          azure_client_id=$(azureClientId)
-          azure_client_secret=$(azureClientSecret)
-          azure_tenant_id=$(azureTenantId)
-          azure_subscription_id=$(azureSubscriptionId)
-          packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
-          packer_vnet_name=$(packerVnetName)
-          packer_vnet_subnet_name=$(packerVnetSubnetName)
-          packer_images_resource_group_name=$(packerImagesResourceGroupName)
-          packer_image_name=$(prodVm1Name)-prv
-          ansible_playbook_path=ansible/$(prodVm1Name)/build-playbook.yml
-          ansible_user=$(ansibleUser)
-          ansible_user_password=$(ansibleUserPass)
-          ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+  # - job: build_vm1
+  #   displayName: 'Build VM1'
+  #   timeoutInMinutes: 30
+  #   pool:
+  #     name: 'Self-Hosted'
+  #   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+  #   variables:
+  #   - group: azure-prod-vm1
+  #   - group: ansible-build-vm1
+  #   steps:
+  #   - checkout: self
+  #     clean: true
+  #     persistCredentials: false
+  #     submodules: false
+  #   - task: riezebosch.Packer.Packer.Packer@1
+  #     displayName: 'Build image'
+  #     inputs:
+  #       connectedServiceType: 'azure'
+  #       azureSubscription: $(azureSubscription)
+  #       templatePath: template.json
+  #       command: 'build'
+  #       force: true
+  #       variables: |
+  #         project=$(project)
+  #         environment=$(environment)
+  #         azure_client_id=$(azureClientId)
+  #         azure_client_secret=$(azureClientSecret)
+  #         azure_tenant_id=$(azureTenantId)
+  #         azure_subscription_id=$(azureSubscriptionId)
+  #         packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
+  #         packer_vnet_name=$(packerVnetName)
+  #         packer_vnet_subnet_name=$(packerVnetSubnetName)
+  #         packer_images_resource_group_name=$(packerImagesResourceGroupName)
+  #         packer_image_name=$(prodVm1Name)-prv
+  #         ansible_playbook_path=ansible/$(prodVm1Name)/build-playbook.yml
+  #         ansible_user=$(ansibleUser)
+  #         ansible_user_password=$(ansibleUserPass)
+  #         ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - job: build_vm2
-    displayName: 'Build VM2'
-    timeoutInMinutes: 30
-    dependsOn:
-    - build_vm1
-    pool:
-      name: 'Self-Hosted'
-    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-    variables:
-    - group: azure-prod-vm2
-    - group: ansible-build-vm2
-    steps:
-    - checkout: self
-      clean: true
-      persistCredentials: false
-      submodules: false
-    - task: riezebosch.Packer.Packer.Packer@1
-      displayName: 'Build image'
-      inputs:
-        connectedServiceType: 'azure'
-        azureSubscription: $(azureSubscription)
-        templatePath: template.json
-        command: 'build'
-        force: true
-        variables: |
-          project=$(project)
-          environment=$(environment)
-          azure_client_id=$(azureClientId)
-          azure_client_secret=$(azureClientSecret)
-          azure_tenant_id=$(azureTenantId)
-          azure_subscription_id=$(azureSubscriptionId)
-          packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
-          packer_vnet_name=$(packerVnetName)
-          packer_vnet_subnet_name=$(packerVnetSubnetName)
-          packer_images_resource_group_name=$(packerImagesResourceGroupName)
-          packer_image_name=$(prodVm2Name)-prv
-          ansible_playbook_path=ansible/$(prodVm2Name)/build-playbook.yml
-          ansible_user=$(ansibleUser)
-          ansible_user_password=$(ansibleUserPass)
-          ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+  # - job: build_vm2
+  #   displayName: 'Build VM2'
+  #   timeoutInMinutes: 30
+  #   dependsOn:
+  #   - build_vm1
+  #   pool:
+  #     name: 'Self-Hosted'
+  #   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+  #   variables:
+  #   - group: azure-prod-vm2
+  #   - group: ansible-build-vm2
+  #   steps:
+  #   - checkout: self
+  #     clean: true
+  #     persistCredentials: false
+  #     submodules: false
+  #   - task: riezebosch.Packer.Packer.Packer@1
+  #     displayName: 'Build image'
+  #     inputs:
+  #       connectedServiceType: 'azure'
+  #       azureSubscription: $(azureSubscription)
+  #       templatePath: template.json
+  #       command: 'build'
+  #       force: true
+  #       variables: |
+  #         project=$(project)
+  #         environment=$(environment)
+  #         azure_client_id=$(azureClientId)
+  #         azure_client_secret=$(azureClientSecret)
+  #         azure_tenant_id=$(azureTenantId)
+  #         azure_subscription_id=$(azureSubscriptionId)
+  #         packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
+  #         packer_vnet_name=$(packerVnetName)
+  #         packer_vnet_subnet_name=$(packerVnetSubnetName)
+  #         packer_images_resource_group_name=$(packerImagesResourceGroupName)
+  #         packer_image_name=$(prodVm2Name)-prv
+  #         ansible_playbook_path=ansible/$(prodVm2Name)/build-playbook.yml
+  #         ansible_user=$(ansibleUser)
+  #         ansible_user_password=$(ansibleUserPass)
+  #         ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - job: build_vm3
-    displayName: 'Build VM3'
-    timeoutInMinutes: 30
-    dependsOn:
-    - build_vm2
-    pool:
-      name: 'Self-Hosted'
-    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-    variables:
-    - group: azure-prod-vm3
-    - group: ansible-build-vm3
-    steps:
-    - checkout: self
-      clean: true
-      persistCredentials: false
-      submodules: false
-    - task: riezebosch.Packer.Packer.Packer@1
-      displayName: 'Build image'
-      inputs:
-        connectedServiceType: 'azure'
-        azureSubscription: $(azureSubscription)
-        templatePath: template.json
-        command: 'build'
-        force: true
-        variables: |
-          project=$(project)
-          environment=$(environment)
-          azure_client_id=$(azureClientId)
-          azure_client_secret=$(azureClientSecret)
-          azure_tenant_id=$(azureTenantId)
-          azure_subscription_id=$(azureSubscriptionId)
-          packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
-          packer_vnet_name=$(packerVnetName)
-          packer_vnet_subnet_name=$(packerVnetSubnetName)
-          packer_images_resource_group_name=$(packerImagesResourceGroupName)
-          packer_image_name=$(prodVm3Name)-prv
-          ansible_playbook_path=ansible/$(prodVm3Name)/build-playbook.yml
-          ansible_user=$(ansibleUser)
-          ansible_user_password=$(ansibleUserPass)
-          ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+  # - job: build_vm3
+  #   displayName: 'Build VM3'
+  #   timeoutInMinutes: 30
+  #   dependsOn:
+  #   - build_vm2
+  #   pool:
+  #     name: 'Self-Hosted'
+  #   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+  #   variables:
+  #   - group: azure-prod-vm3
+  #   - group: ansible-build-vm3
+  #   steps:
+  #   - checkout: self
+  #     clean: true
+  #     persistCredentials: false
+  #     submodules: false
+  #   - task: riezebosch.Packer.Packer.Packer@1
+  #     displayName: 'Build image'
+  #     inputs:
+  #       connectedServiceType: 'azure'
+  #       azureSubscription: $(azureSubscription)
+  #       templatePath: template.json
+  #       command: 'build'
+  #       force: true
+  #       variables: |
+  #         project=$(project)
+  #         environment=$(environment)
+  #         azure_client_id=$(azureClientId)
+  #         azure_client_secret=$(azureClientSecret)
+  #         azure_tenant_id=$(azureTenantId)
+  #         azure_subscription_id=$(azureSubscriptionId)
+  #         packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
+  #         packer_vnet_name=$(packerVnetName)
+  #         packer_vnet_subnet_name=$(packerVnetSubnetName)
+  #         packer_images_resource_group_name=$(packerImagesResourceGroupName)
+  #         packer_image_name=$(prodVm3Name)-prv
+  #         ansible_playbook_path=ansible/$(prodVm3Name)/build-playbook.yml
+  #         ansible_user=$(ansibleUser)
+  #         ansible_user_password=$(ansibleUserPass)
+  #         ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
   - job: deploy_vm1
     displayName: 'Deploy VM1'
-    dependsOn:
-    - build_vm3
+    # dependsOn:
+    # - build_vm3
     condition: succeeded()
     timeoutInMinutes: 30
     pool:
@@ -619,7 +619,6 @@ stages:
           --location '$(prodVmRegion)'
           --size '$(prodVm1Size)'
           --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)'
-          --public-ip-address ''
           --admin-username '$(ansibleUser)'
           --admin-password '$(ansibleUserPass)'
           --tags 'project=$(project)' 'environment=$(environment)'
@@ -724,7 +723,6 @@ stages:
           --location '$(prodVmRegion)'
           --size '$(prodVm2Size)'
           --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)'
-          --public-ip-address ''
           --admin-username '$(ansibleUser)'
           --admin-password '$(ansibleUserPass)'
           --tags 'project=$(project)' 'environment=$(environment)'
@@ -794,7 +792,114 @@ stages:
       displayName: 'Export VM2 IP address'
 
 
+  - job: deploy_vm3
+    displayName: 'Deploy VM3'
+    dependsOn:
+    - deploy_vm1
+    - deploy_vm2
+    condition: succeeded()
+    timeoutInMinutes: 30
+    pool:
+      name: 'Self-Hosted'
+    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+    variables:
+    - group: azure-prod-vm3
+    - group: ansible-deploy-vm3
+    - name: VM1_IP
+      value: $[ dependencies.deploy_vm1.outputs['export_ip.VM1_IP'] ]
+    - name: VM2_IP
+      value: $[ dependencies.deploy_vm2.outputs['export_ip.VM2_IP'] ]
+    steps:
+    - task: AzureCLI@1
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptLocation: inlineScript
+        inlineScript: |
+          az group create --location '$(prodVmRegion)' --name '$(prodVm3ResourceGroupName)-prv' --tags 'project=$(project)' 'environment=$(environment)'
+        failOnStandardError: true
+      name: 'create_rg'
+      displayName: 'Create Resource group'
 
+    - task: AzureCLI@1
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptLocation: inlineScript
+        inlineScript: >
+          az vm create
+          --resource-group '$(prodVm3ResourceGroupName)-prv'
+          --name '$(prodVm3Name)-prv'
+          --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/$(prodVm3Name)-prv'
+          --location '$(prodVmRegion)'
+          --size '$(prodVm2Size)'
+          --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)'
+          --admin-username '$(ansibleUser)'
+          --admin-password '$(ansibleUserPass)'
+          --tags 'project=$(project)' 'environment=$(environment)'
+        failOnStandardError: true
+      name: 'create_vm'
+      displayName: 'Create VM'
+
+    - task: AzureCLI@1
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptLocation: inlineScript
+        inlineScript: |
+          VM3_IP=$(az vm list-ip-addresses --resource-group $(prodVm3ResourceGroupName)-prv --name $(prodVm3Name)-prv --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+          echo "##vso[task.setvariable variable=VM3_IP;isOutput=true]$VM3_IP"
+        failOnStandardError: true
+      name: 'get_vm_ip'
+      displayName: 'Get VM IP'
+
+    - task: AzureCLI@1
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptLocation: inlineScript
+        inlineScript: |
+          az vm run-command invoke --command-id RunPowerShellScript --resource-group $(prodVm3ResourceGroupName)-prv --name $(prodVm3Name)-prv --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
+        failOnStandardError: true
+      name: 'setup_winrm'
+      displayName: 'Setup WinRM'
+
+    - bash: |
+        echo -e "[all]\n$GET_VM_IP_VM3_IP" > hosts
+      name: 'create_ansible_hosts'
+      displayName: 'Create Ansible hosts file'
+
+    - bash: >
+        ansible-playbook
+        -vvvv
+        -i hosts
+        ansible/$(prodVm3Name)/release-playbook.yml
+        --extra-vars='
+        ansible_user=$(ansibleUser)
+        ansible_password=$(ansibleUserPass)
+        ansible_connection=winrm
+        ansible_winrm_server_cert_validation=ignore
+        var1=$(var1)
+        var2=$(var2)
+        var3=$(var3)
+        var4=$(var4)
+        var5=$(VM1_IP)
+        var6=$(VM2_IP)
+        '
+      name: 'execute_ansible'
+      displayName: 'Execute Ansible provisioner'
+
+    - task: AzureCLI@1
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptLocation: inlineScript
+        inlineScript: |
+          az keyvault create --resource-group $(prodVm3ResourceGroupName)-prv --name $(prodVm3KvName)-prv --location "$(prodVmRegion)" --enabled-for-disk-encryption
+          az vm encryption enable --resource-group $(prodVm3ResourceGroupName)-prv --name $(prodVm3Name)-prv --disk-encryption-keyvault $(prodVm3KvName)-prv
+        failOnStandardError: true
+      name: 'encrypt_vm'
+      displayName: 'Encrypt VM'
+
+    - bash: |
+        echo "##vso[task.setvariable variable=VM3_IP;isOutput=true]$GET_VM_IP_VM3_IP"
+      name: 'export_ip'
+      displayName: 'Export VM3 IP address'
 
 
 
