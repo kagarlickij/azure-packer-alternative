@@ -595,7 +595,7 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           az keyvault create --resource-group $(prodVm1ResourceGroupName)-prv --name $(prodVm1KvName)-prv --location "$(prodVmRegion)" --enabled-for-disk-encryption
-          az vm encryption enable --resource-group $(prodVm1ResourceGroupName)-prv --name $(prodVm1Name)-prv --disk-encryption-keyvault $(prodVm1KvName)
+          az vm encryption enable --resource-group $(prodVm1ResourceGroupName)-prv --name $(prodVm1Name)-prv --disk-encryption-keyvault $(prodVm1KvName)-prv
         failOnStandardError: true
       name: 'encrypt_vm'
       displayName: 'Encrypt VM'
