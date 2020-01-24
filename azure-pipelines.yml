@@ -603,5 +603,5 @@ stages:
         inlineScript: |
           az group delete --name $(prodVm1ResourceGroupName)-prv --yes
         failOnStandardError: true
-      name: 'create_rg'
+      name: 'delete_rg'
       displayName: 'Delete Resource group'
