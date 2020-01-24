@@ -598,7 +598,6 @@ stages:
       name: 'export_ip'
       displayName: 'Export VM1 IP address'
 
-
   - job: cleanup
     displayName: 'Cleanup'
     dependsOn:
@@ -621,7 +620,7 @@ stages:
         inlineScript: |
           az group delete --name $(prodVm1ResourceGroupName)-prv --yes
         failOnStandardError: true
-      name: 'delete_rg'
+      name: 'delete_vm1_rg'
       displayName: 'Delete VM1 Resource group'
 
     - task: AzureCLI@1
@@ -632,5 +631,5 @@ stages:
         inlineScript: |
           az image delete --ids '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/$(prodVm1Name)-prv'
         failOnStandardError: true
-      name: 'delete_rg'
+      name: 'delete_vm1_image'
       displayName: 'Delete VM1 image'
