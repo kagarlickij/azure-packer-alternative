@@ -830,7 +830,7 @@ stages:
           --name '$(prodVm3Name)-prv'
           --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/$(prodVm3Name)-prv'
           --location '$(prodVmRegion)'
-          --size '$(prodVm2Size)'
+          --size '$(prodVm3Size)'
           --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)'
           --admin-username '$(ansibleUser)'
           --admin-password '$(ansibleUserPass)'
@@ -942,4 +942,3 @@ stages:
   #     name: 'delete_vm1_image'
   #     displayName: 'Delete VM1 image'
 
-  
