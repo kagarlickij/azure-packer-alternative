@@ -512,7 +512,7 @@ stages:
         azureSubscription: $(azureSubscription)
         scriptLocation: inlineScript
         inlineScript: |
-          az group create --location $(prodVmRegion) --name $(prodVm1ResourceGroupName)-prv --tags 'project=$(project)' 'environment=$(environment)'
+          az group create --location '$(prodVmRegion)' --name '$(prodVm1ResourceGroupName)-prv' --tags 'project=$(project)' 'environment=$(environment)'
         failOnStandardError: true
       name: 'create_rg'
       displayName: 'Create Resource group'
