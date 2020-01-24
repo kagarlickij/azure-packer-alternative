@@ -497,6 +497,8 @@ stages:
 
   - job: deploy_vm1
     displayName: 'Deploy VM1'
+    dependsOn:
+    - build_vm1
     condition: succeeded()
     timeoutInMinutes: 30
     pool:
@@ -599,6 +601,8 @@ stages:
 
   - job: cleanup
     displayName: 'Cleanup'
+    dependsOn:
+    - deploy_vm1
     condition: succeeded()
     timeoutInMinutes: 30
     pool:
