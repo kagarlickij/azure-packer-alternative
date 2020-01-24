@@ -497,6 +497,7 @@ stages:
 
   - job: deploy_vm1
     displayName: 'Deploy VM1'
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
