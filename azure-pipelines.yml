@@ -941,3 +941,5 @@ stages:
   #       failOnStandardError: true
   #     name: 'delete_vm1_image'
   #     displayName: 'Delete VM1 image'
+
+  
