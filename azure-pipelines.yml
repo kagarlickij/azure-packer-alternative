@@ -566,7 +566,7 @@ stages:
         ansible-playbook
         -vvvv
         -i hosts
-        ansible/$(prodVm1Name)-prv/release-playbook.yml
+        ansible/$(prodVm1Name)/release-playbook.yml
         --extra-vars='
         ansible_user=$(ansibleUser)
         ansible_password=$(ansibleUserPass)
