@@ -490,6 +490,7 @@ stages:
           packer_vnet_subnet_name=$(packerVnetSubnetName)
           packer_images_resource_group_name=$(packerImagesResourceGroupName)
           packer_image_name=$(prodVm1Name)-prv
+          ansible_playbook_path=ansible/$(prodVm1Name)/build-playbook.yml
           ansible_user=$(ansibleUser)
           ansible_user_password=$(ansibleUserPass)
           ansible_extra_vars='ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'

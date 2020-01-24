@@ -11,6 +11,7 @@
         "packer_vnet_subnet_name": "",
         "packer_images_resource_group_name": "",
         "packer_image_name": "",
+        "ansible_playbook_path": "",
         "ansible_user": "",
         "ansible_user_password": "",
         "ansible_extra_vars": ""
@@ -86,7 +87,7 @@
         },
         {
             "type": "shell-local",
-            "command": "ansible-playbook -vvvv -i hosts ansible/{{user `packer_image_name`}}/build-playbook.yml --extra-vars={{user `ansible_extra_vars`}}"
+            "command": "ansible-playbook -vvvv -i hosts {{user `ansible_playbook_path`}} --extra-vars={{user `ansible_extra_vars`}}"
         },
         {
             "type": "shell-local",
