@@ -42,4 +42,4 @@ jobs:
         packer_image_name=${{ parameters.vm_name }}
         ansible_user=$(ansibleUser)
         ansible_user_password=$(ansibleUserPass)
-        ansible_extra_vars=${{ parameters.vm_name }}
+        ansible_extra_vars=${{ parameters.ansible_extra_vars }}
