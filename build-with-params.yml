@@ -1,5 +1,4 @@
 parameters:
-  name: ''
   variable_group1: ''
   variable_group2: ''
   template_path: ''
@@ -9,7 +8,7 @@ parameters:
   ansible_extra_vars: ''
 
 jobs:
-- job: ${{ parameters.name }}
+- job: build_${{ parameters.vm_name }}
   timeoutInMinutes: 30
   pool:
     name: 'Self-Hosted'
