@@ -7,6 +7,7 @@ parameters:
   vm_kv_name: ''
   vm_size: ''
   vm_ip_name: ''
+  ansible_playbook_path: ''
   ansible_extra_vars: ''
 
 jobs:
@@ -70,18 +71,8 @@ jobs:
           name: 'create_ansible_hosts'
           displayName: 'Create Ansible hosts file'
 
-        - bash: >
-            ansible-playbook
-            -vvvv
-            -i hosts
-            ansible/${{ parameters.vm_name }}/release-playbook.yml
-            --extra-vars='
-            ansible_user=$(ansibleUser)
-            ansible_password=$(ansibleUserPass)
-            ansible_connection=winrm
-            ansible_winrm_server_cert_validation=ignore
-            ${{ parameters.ansible_extra_vars }}
-            '
+        - bash: |
+            ansible-playbook -vvvv -i hosts ${{ parameters.ansible_playbook_path }} --extra-vars=${{ parameters.ansible_extra_vars }}
           name: 'execute_ansible'
           displayName: 'Execute Ansible provisioner'
 
