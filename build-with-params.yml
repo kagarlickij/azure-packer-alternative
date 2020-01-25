@@ -2,16 +2,17 @@ parameters:
   name: ''
   variable_group1: ''
   variable_group2: ''
+  template_path: ''
+  build_container: ''
   vm_name: ''
   ansible_extra_vars: ''
 
 jobs:
 - job: ${{ parameters.name }}
-  displayName: ${{ parameters.name }}
   timeoutInMinutes: 30
   pool:
     name: 'Self-Hosted'
-  container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+  container: ${{ parameters.build_container }}
   variables:
   - group: ${{ parameters.variable_group1 }}
   - group: ${{ parameters.variable_group2 }}
@@ -25,7 +26,7 @@ jobs:
     inputs:
       connectedServiceType: 'azure'
       azureSubscription: $(azureSubscription)
-      templatePath: template.json
+      templatePath: ${{ parameters.template_path }}
       command: 'build'
       force: true
       variables: |
