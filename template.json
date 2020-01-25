@@ -87,7 +87,7 @@
         },
         {
             "type": "shell-local",
-            "command": "ansible-playbook -vvvv -i hosts {{user `ansible_playbook_path`}} --extra-vars={{user `ansible_extra_vars`}}"
+            "command": "ansible-playbook -vvvv -i hosts {{user `ansible_playbook_path`}} --extra-vars='{{user `ansible_extra_vars`}}'"
         },
         {
             "type": "shell-local",
