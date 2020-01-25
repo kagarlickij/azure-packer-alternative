@@ -5,6 +5,7 @@ parameters:
   template_path: ''
   build_container: ''
   vm_name: ''
+  ansible_playbook_path: ''
   ansible_extra_vars: ''
 
 jobs:
@@ -41,6 +42,7 @@ jobs:
         packer_vnet_subnet_name=$(packerVnetSubnetName)
         packer_images_resource_group_name=$(packerImagesResourceGroupName)
         packer_image_name=${{ parameters.vm_name }}
+        ansible_playbook_path=${{ parameters.ansible_playbook_path }}
         ansible_user=$(ansibleUser)
         ansible_user_password=$(ansibleUserPass)
         ansible_extra_vars=${{ parameters.ansible_extra_vars }}
