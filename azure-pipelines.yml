@@ -36,12 +36,12 @@ stages:
   jobs:
   - template: build-with-params.yml
     parameters:
-      # name: 'build_vm1'
+      name: 'build_vm1'
       variable_group1: 'azure-prod-vm1'
       variable_group2: 'ansible-build-vm1'
       template_path: 'template.json'
       build_container: 'kagarlickij/packer-ansible-azure-docker-runtime:2.0.0'
-      vm_name: $(prodVm1Name)
+      vm_name: '$(prodVm1Name)'
       ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
