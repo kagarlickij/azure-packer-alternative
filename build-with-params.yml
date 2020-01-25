@@ -8,7 +8,7 @@ parameters:
   ansible_extra_vars: ''
 
 jobs:
-- job: build_${{ parameters.vm_name }}
+- job: build_'${{ parameters.vm_name }}'
   timeoutInMinutes: 30
   pool:
     name: 'Self-Hosted'
