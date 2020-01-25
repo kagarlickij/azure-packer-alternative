@@ -86,16 +86,16 @@ jobs:
           name: 'execute_ansible'
           displayName: 'Execute Ansible provisioner'
 
-        - task: AzureCLI@1
-          inputs:
-            azureSubscription: $(azureSubscription)
-            scriptLocation: inlineScript
-            inlineScript: |
-              az keyvault create --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_kv_name }} --location "$(prodVmRegion)" --enabled-for-disk-encryption
-              az vm encryption enable --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --disk-encryption-keyvault ${{ parameters.vm_kv_name }}
-            failOnStandardError: true
-          name: 'encrypt_vm'
-          displayName: 'Encrypt VM'
+        # - task: AzureCLI@1
+        #   inputs:
+        #     azureSubscription: $(azureSubscription)
+        #     scriptLocation: inlineScript
+        #     inlineScript: |
+        #       az keyvault create --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_kv_name }} --location "$(prodVmRegion)" --enabled-for-disk-encryption
+        #       az vm encryption enable --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --disk-encryption-keyvault ${{ parameters.vm_kv_name }}
+        #     failOnStandardError: true
+        #   name: 'encrypt_vm'
+        #   displayName: 'Encrypt VM'
 
         - bash: |
             echo "##vso[task.setvariable variable=${{ parameters.vm_ip_name }};isOutput=true]$GET_VM_IP_${{ parameters.vm_ip_name }}"
