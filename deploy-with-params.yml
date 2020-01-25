@@ -49,7 +49,7 @@ jobs:
             azureSubscription: $(azureSubscription)
             scriptLocation: inlineScript
             inlineScript: |
-              ${{ parameters.vm_ip_name }}=$(az vm list-ip-addresses --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+              '${{ parameters.vm_ip_name }}'=$(az vm list-ip-addresses --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
               echo "##vso[task.setvariable variable=${{ parameters.vm_ip_name }};isOutput=true]$(${{ parameters.vm_ip_name }})"
             failOnStandardError: true
           name: 'get_vm_ip'
@@ -67,6 +67,7 @@ jobs:
 
         - bash: |
             echo -e "[all]\n$GET_VM_IP_${{ parameters.vm_ip_name }}" > hosts
+            cat hosts
           name: 'create_ansible_hosts'
           displayName: 'Create Ansible hosts file'
 
