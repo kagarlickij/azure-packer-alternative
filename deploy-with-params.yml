@@ -60,6 +60,16 @@ jobs:
             azureSubscription: $(azureSubscription)
             scriptLocation: inlineScript
             inlineScript: |
+              printenv
+            failOnStandardError: true
+          name: 'debug'
+          displayName: 'Debug'
+
+        - task: AzureCLI@1
+          inputs:
+            azureSubscription: $(azureSubscription)
+            scriptLocation: inlineScript
+            inlineScript: |
               az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
             failOnStandardError: true
           name: 'setup_winrm'
