@@ -2,11 +2,11 @@ parameters:
   name: ''
   variable_group1: ''
   variable_group2: ''
-  vm_name: '' #prodVm1Name
-  vm_rg_name: '' #prodVm1ResourceGroupName
+  vm_name: ''
+  vm_rg_name: ''
   vm_kv_name: ''
   vm_size: ''
-  vm_ip_name: '' #VM1_IP
+  vm_ip_name: ''
   ansible_extra_vars: ''
 
 jobs:
