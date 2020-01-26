@@ -73,7 +73,7 @@ jobs:
           displayName: 'Create Ansible hosts file'
 
         - bash: |
-            ansible-playbook -vvvv -i hosts ${{ parameters.ansible_playbook_path }} --extra-vars=${{ parameters.ansible_extra_vars }}
+            ansible-playbook -vvvv -i hosts ${{ parameters.ansible_playbook_path }} --extra-vars="${{ parameters.ansible_extra_vars }}"
           name: 'execute_ansible'
           displayName: 'Execute Ansible provisioner'
 
