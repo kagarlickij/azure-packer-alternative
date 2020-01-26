@@ -23,7 +23,8 @@ jobs:
   - group: ${{ parameters.variable_group1 }}
   - group: ${{ parameters.variable_group2 }}
   - name: ${{ parameters.import_vm_ip_name }}
-    value: $[ dependencies.'${{ parameters.import_vm_ip_job_name }}'.outputs['${{ parameters.import_vm_ip_job_name }}.export_ip.${{ parameters.import_vm_ip_name }}'] ]
+    value: 'test'
+    # value: $[ dependencies.'${{ parameters.import_vm_ip_job_name }}'.outputs['${{ parameters.import_vm_ip_job_name }}.export_ip.${{ parameters.import_vm_ip_name }}'] ]
   environment: 'sbx'
   strategy:
     runOnce:
