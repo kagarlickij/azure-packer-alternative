@@ -83,7 +83,7 @@ stages:
       vm_size: '$(prodVm1Size)'
       vm_ip_name: 'VM1_IP'
       ansible_playbook_path: ansible/$(prodVm1Name)/release-playbook.yml
-      ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+      ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1="$(var1)" var2="$(var2)" var3="$(var3)" var4="$(var4)"'
 
 
   # jobs:
