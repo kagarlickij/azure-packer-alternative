@@ -19,7 +19,7 @@ jobs:
   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
   variables:
   - group: ${{ parameters.variable_group1 }}
-  - group: ${{ parameters.variable_group1 }}
+  - group: ${{ parameters.variable_group2 }}
   environment: 'sbx'
   strategy:
     runOnce:
