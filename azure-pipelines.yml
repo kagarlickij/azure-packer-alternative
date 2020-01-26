@@ -75,7 +75,7 @@ stages:
   - group: azure-prod-vm2
   - group: azure-prod-vm3
   jobs:
-  - template: build-with-params.yml
+  - template: deploy-with-params.yml
     parameters:
       environment: 'sbx'
       vm1_name: '$(prodVm1Name)'
