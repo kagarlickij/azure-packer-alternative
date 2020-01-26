@@ -1,57 +1,42 @@
 parameters:
-  name: ''
-  variable_group1: ''
-  variable_group2: ''
-  vm_name: ''
-  vm_rg_name: ''
-  vm_kv_name: ''
-  vm_size: ''
-  vm_ip_name: ''
-  import_vm_ip_name: ''
-  import_vm_ip_job_name: ''
-  ansible_playbook_path: ''
-  ansible_extra_vars: ''
+  environment: '' #${{ parameters.environment }}
+  vm1_name: '' #${{ parameters.vm1_name }}
+  vm2_name: ''
+  vm3_name: ''
+  vm1_rg_name: '' #${{ parameters.vm1_rg_name }}
+  vm2_rg_name: ''
+  vm3_rg_name: ''
+  vm1_kv_name: '' #${{ parameters.vm1_kv_name }}
+  vm2_kv_name: ''
+  vm3_kv_name: ''
+  vm1_size: '' #${{ parameters.vm1_size }}
+  vm2_size: ''
+  vm3_size: ''
 
 jobs:
-- deployment: ${{ parameters.name }}
-  displayName: ${{ parameters.name }}
+- deployment: deploy_vm1
   timeoutInMinutes: 30
   pool:
     name: 'Self-Hosted'
   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
   variables:
-  - group: ${{ parameters.variable_group1 }}
-  - group: ${{ parameters.variable_group2 }}
-  - name: test
-    value: 'test'
-    # value: $[ dependencies.'${{ parameters.import_vm_ip_job_name }}'.outputs['${{ parameters.import_vm_ip_job_name }}.export_ip.${{ parameters.import_vm_ip_name }}'] ]
-  environment: 'sbx'
+  - group: ansible-deploy-vm1
+  environment: '${{ parameters.environment }}'
   strategy:
     runOnce:
       deploy:
         steps:
-
-        - task: AzureCLI@1
-          inputs:
-            azureSubscription: $(azureSubscription)
-            scriptLocation: inlineScript
-            inlineScript: |
-              printenv
-            failOnStandardError: true
-          name: 'DEBUG'
-          displayName: 'DEBUG'
-
         - task: AzureCLI@1
           inputs:
             azureSubscription: $(azureSubscription)
             scriptLocation: inlineScript
             inlineScript: >
               az vm create
-              --resource-group '${{ parameters.vm_rg_name }}'
-              --name '${{ parameters.vm_name }}'
-              --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/${{ parameters.vm_name }}'
+              --resource-group '${{ parameters.vm1_rg_name }}'
+              --name '${{ parameters.vm1_name }}'
+              --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/${{ parameters.vm1_name }}'
               --location '$(prodVmRegion)'
-              --size '${{ parameters.vm_size }}'
+              --size '$(prodVm1Size)'
               --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)'
               --admin-username '$(ansibleUser)'
               --admin-password '$(ansibleUserPass)'
@@ -65,8 +50,8 @@ jobs:
             azureSubscription: $(azureSubscription)
             scriptLocation: inlineScript
             inlineScript: |
-              IP=$(az vm list-ip-addresses --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
-              echo "##vso[task.setvariable variable=${{ parameters.vm_ip_name }};isOutput=true]$IP"
+              VM1_IP=$(az vm list-ip-addresses --resource-group ${{ parameters.vm1_rg_name }} --name ${{ parameters.vm1_name }} --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+              echo "##vso[task.setvariable variable=VM1_IP;isOutput=true]$VM1_IP"
             failOnStandardError: true
           name: 'get_vm_ip'
           displayName: 'Get VM IP'
@@ -76,18 +61,31 @@ jobs:
             azureSubscription: $(azureSubscription)
             scriptLocation: inlineScript
             inlineScript: |
-              az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
+              az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm1_rg_name }} --name ${{ parameters.vm1_name }} --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
             failOnStandardError: true
           name: 'setup_winrm'
           displayName: 'Setup WinRM'
 
         - bash: |
-            echo -e "[all]\n$GET_VM_IP_${{ parameters.vm_ip_name }}" > hosts
+            echo -e "[all]\n$GET_VM_IP_VM1_IP" > hosts
           name: 'create_ansible_hosts'
           displayName: 'Create Ansible hosts file'
 
-        - bash: |
-            ansible-playbook -vvvv -i hosts ${{ parameters.ansible_playbook_path }} --extra-vars="${{ parameters.ansible_extra_vars }}"
+        - bash: >
+            ansible-playbook
+            -vvvv
+            -i hosts
+            ansible/${{ parameters.vm1_name }}/release-playbook.yml
+            --extra-vars='
+            ansible_user=$(ansibleUser)
+            ansible_password=$(ansibleUserPass)
+            ansible_connection=winrm
+            ansible_winrm_server_cert_validation=ignore
+            var1=$(var1)
+            var2=$(var2)
+            var3=$(var3)
+            var4=$(var4)
+            '
           name: 'execute_ansible'
           displayName: 'Execute Ansible provisioner'
 
@@ -96,13 +94,222 @@ jobs:
             azureSubscription: $(azureSubscription)
             scriptLocation: inlineScript
             inlineScript: |
-              az keyvault create --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_kv_name }} --location "$(prodVmRegion)" --enabled-for-disk-encryption
-              az vm encryption enable --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --disk-encryption-keyvault ${{ parameters.vm_kv_name }}
+              az keyvault create --resource-group ${{ parameters.vm1_rg_name }} --name ${{ parameters.vm1_kv_name }} --location "$(prodVmRegion)" --enabled-for-disk-encryption
+              az vm encryption enable --resource-group ${{ parameters.vm1_rg_name }} --name ${{ parameters.vm1_name }} --disk-encryption-keyvault ${{ parameters.vm1_kv_name }}
             failOnStandardError: true
           name: 'encrypt_vm'
           displayName: 'Encrypt VM'
 
         - bash: |
-            echo "##vso[task.setvariable variable=${{ parameters.vm_ip_name }};isOutput=true]$GET_VM_IP_${{ parameters.vm_ip_name }}"
+            echo "##vso[task.setvariable variable=VM1_IP;isOutput=true]$GET_VM_IP_VM1_IP"
           name: 'export_ip'
-          displayName: 'Export ${{ parameters.vm_ip_name }} address'
+          displayName: 'Export VM1 IP address'
+
+
+
+
+
+
+
+
+# - deployment: deploy_vm2
+#   timeoutInMinutes: 30
+#   dependsOn:
+#   - deploy_vm1
+#   condition: succeeded()
+#   pool:
+#     name: 'Self-Hosted'
+#   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+#   variables:
+#   - group: azure-prod-vm2
+#   - group: ansible-deploy-vm2
+#   - name: VM1_IP
+#     value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+#   environment: 'sbx'
+#   strategy:
+#     runOnce:
+#       deploy:
+#         steps:
+#         - task: AzureCLI@1
+#           inputs:
+#             azureSubscription: $(azureSubscription)
+#             scriptLocation: inlineScript
+#             inlineScript: >
+#               az vm create
+#               --resource-group '$(prodVm2ResourceGroupName)'
+#               --name '$(prodVm2Name)'
+#               --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/$(prodVm2Name)'
+#               --location '$(prodVmRegion)'
+#               --size '$(prodVm2Size)'
+#               --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)'
+#               --public-ip-address ''
+#               --admin-username '$(ansibleUser)'
+#               --admin-password '$(ansibleUserPass)'
+#               --tags 'project=$(project)' 'environment=$(environment)'
+#             failOnStandardError: true
+#           name: 'create_vm'
+#           displayName: 'Create VM'
+
+#         - task: AzureCLI@1
+#           inputs:
+#             azureSubscription: $(azureSubscription)
+#             scriptLocation: inlineScript
+#             inlineScript: |
+#               VM2_IP=$(az vm list-ip-addresses --resource-group $(prodVm2ResourceGroupName) --name $(prodVm2Name) --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+#               echo "##vso[task.setvariable variable=VM2_IP;isOutput=true]$VM2_IP"
+#             failOnStandardError: true
+#           name: 'get_vm_ip'
+#           displayName: 'Get VM IP'
+
+#         - task: AzureCLI@1
+#           inputs:
+#             azureSubscription: $(azureSubscription)
+#             scriptLocation: inlineScript
+#             inlineScript: |
+#               az vm run-command invoke --command-id RunPowerShellScript --resource-group $(prodVm2ResourceGroupName) --name $(prodVm2Name) --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
+#             failOnStandardError: true
+#           name: 'setup_winrm'
+#           displayName: 'Setup WinRM'
+
+#         - bash: |
+#             echo -e "[all]\n$GET_VM_IP_VM2_IP" > hosts
+#           name: 'create_ansible_hosts'
+#           displayName: 'Create Ansible hosts file'
+
+#         - bash: >
+#             ansible-playbook
+#             -vvvv
+#             -i hosts
+#             ansible/$(prodVm2Name)/release-playbook.yml
+#             --extra-vars='
+#             ansible_user=$(ansibleUser)
+#             ansible_password=$(ansibleUserPass)
+#             ansible_connection=winrm
+#             ansible_winrm_server_cert_validation=ignore
+#             var1=$(var1)
+#             var2=$(var2)
+#             var3=$(var3)
+#             var4=$(var4)
+#             var5=$(VM1_IP)
+#             '
+#           name: 'execute_ansible'
+#           displayName: 'Execute Ansible provisioner'
+
+#         - task: AzureCLI@1
+#           inputs:
+#             azureSubscription: $(azureSubscription)
+#             scriptLocation: inlineScript
+#             inlineScript: |
+#               az keyvault create --resource-group $(prodVm2ResourceGroupName) --name $(prodVm2KvName) --location "$(prodVmRegion)" --enabled-for-disk-encryption
+#               az vm encryption enable --resource-group $(prodVm2ResourceGroupName) --name $(prodVm2Name) --disk-encryption-keyvault $(prodVm2KvName)
+#             failOnStandardError: true
+#           name: 'encrypt_vm'
+#           displayName: 'Encrypt VM'
+
+#         - bash: |
+#             echo "##vso[task.setvariable variable=VM2_IP;isOutput=true]$GET_VM_IP_VM2_IP"
+#           name: 'export_ip'
+#           displayName: 'Export VM2 IP address'
+
+# - deployment: deploy_vm3
+#   timeoutInMinutes: 30
+#   dependsOn:
+#   - deploy_vm1
+#   - deploy_vm2
+#   condition: succeeded()
+#   pool:
+#     name: 'Self-Hosted'
+#   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+#   variables:
+#   - group: azure-prod-vm3
+#   - group: ansible-deploy-vm3
+#   - name: VM1_IP
+#     value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+#   - name: VM2_IP
+#     value: $[ dependencies.deploy_vm2.outputs['deploy_vm2.export_ip.VM2_IP'] ]
+#   environment: 'sbx'
+#   strategy:
+#     runOnce:
+#       deploy:
+#         steps:
+#         - task: AzureCLI@1
+#           inputs:
+#             azureSubscription: $(azureSubscription)
+#             scriptLocation: inlineScript
+#             inlineScript: >
+#               az vm create
+#               --resource-group '$(prodVm3ResourceGroupName)'
+#               --name '$(prodVm3Name)'
+#               --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/$(prodVm3Name)'
+#               --location '$(prodVmRegion)'
+#               --size '$(prodVm3Size)'
+#               --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)'
+#               --public-ip-address ''
+#               --admin-username '$(ansibleUser)'
+#               --admin-password '$(ansibleUserPass)'
+#               --tags 'project=$(project)' 'environment=$(environment)'
+#             failOnStandardError: true
+#           name: 'create_vm'
+#           displayName: 'Create VM'
+
+#         - task: AzureCLI@1
+#           inputs:
+#             azureSubscription: $(azureSubscription)
+#             scriptLocation: inlineScript
+#             inlineScript: |
+#               VM3_IP=$(az vm list-ip-addresses --resource-group $(prodVm3ResourceGroupName) --name $(prodVm3Name) --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+#               echo "##vso[task.setvariable variable=VM3_IP;isOutput=true]$VM3_IP"
+#             failOnStandardError: true
+#           name: 'get_vm_ip'
+#           displayName: 'Get VM IP'
+
+#         - task: AzureCLI@1
+#           inputs:
+#             azureSubscription: $(azureSubscription)
+#             scriptLocation: inlineScript
+#             inlineScript: |
+#               az vm run-command invoke --command-id RunPowerShellScript --resource-group $(prodVm3ResourceGroupName) --name $(prodVm3Name) --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
+#             failOnStandardError: true
+#           name: 'setup_winrm'
+#           displayName: 'Setup WinRM'
+
+#         - bash: |
+#             echo -e "[all]\n$GET_VM_IP_VM3_IP" > hosts
+#           name: 'create_ansible_hosts'
+#           displayName: 'Create Ansible hosts file'
+
+#         - bash: >
+#             ansible-playbook
+#             -vvvv
+#             -i hosts
+#             ansible/$(prodVm3Name)/release-playbook.yml
+#             --extra-vars='
+#             ansible_user=$(ansibleUser)
+#             ansible_password=$(ansibleUserPass)
+#             ansible_connection=winrm
+#             ansible_winrm_server_cert_validation=ignore
+#             var1=$(var1)
+#             var2=$(var2)
+#             var3=$(var3)
+#             var4=$(var4)
+#             var5=$(VM1_IP)
+#             var6=$(VM2_IP)
+#             '
+#           name: 'execute_ansible'
+#           displayName: 'Execute Ansible provisioner'
+
+#         - task: AzureCLI@1
+#           inputs:
+#             azureSubscription: $(azureSubscription)
+#             scriptLocation: inlineScript
+#             inlineScript: |
+#               az keyvault create --resource-group $(prodVm3ResourceGroupName) --name $(prodVm3KvName) --location "$(prodVmRegion)" --enabled-for-disk-encryption
+#               az vm encryption enable --resource-group $(prodVm3ResourceGroupName) --name $(prodVm3Name) --disk-encryption-keyvault $(prodVm3KvName)
+#             failOnStandardError: true
+#           name: 'encrypt_vm'
+#           displayName: 'Encrypt VM'
+
+#         - bash: |
+#             echo "##vso[task.setvariable variable=VM3_IP;isOutput=true]$GET_VM_IP_VM3_IP"
+#           name: 'export_ip'
+#           displayName: 'Export VM3 IP address'
