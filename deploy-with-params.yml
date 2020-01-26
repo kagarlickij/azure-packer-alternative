@@ -7,6 +7,8 @@ parameters:
   vm_kv_name: ''
   vm_size: ''
   vm_ip_name: ''
+  import_vm_ip_name: ''
+  import_vm_ip_job_name: ''
   ansible_playbook_path: ''
   ansible_extra_vars: ''
 
@@ -20,11 +22,24 @@ jobs:
   variables:
   - group: ${{ parameters.variable_group1 }}
   - group: ${{ parameters.variable_group2 }}
+  - name: ${{ parameters.import_vm_ip_name }}
+    value: $[ dependencies.${{ parameters.import_vm_ip_job_name }}.outputs['${{ parameters.import_vm_ip_job_name }}.export_ip.${{ parameters.import_vm_ip_name }}'] ]
   environment: 'sbx'
   strategy:
     runOnce:
       deploy:
         steps:
+
+        - task: AzureCLI@1
+          inputs:
+            azureSubscription: $(azureSubscription)
+            scriptLocation: inlineScript
+            inlineScript: |
+              printenv
+            failOnStandardError: true
+          name: 'DEBUG'
+          displayName: 'DEBUG'
+
         - task: AzureCLI@1
           inputs:
             azureSubscription: $(azureSubscription)
@@ -67,8 +82,6 @@ jobs:
 
         - bash: |
             echo -e "[all]\n$GET_VM_IP_${{ parameters.vm_ip_name }}" > hosts
-            cat hosts
-            printenv
           name: 'create_ansible_hosts'
           displayName: 'Create Ansible hosts file'
 
