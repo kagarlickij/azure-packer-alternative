@@ -12,7 +12,6 @@ parameters:
   vm1_size: '' #${{ parameters.vm1_size }}
   vm2_size: ''
   vm3_size: ''
-
 jobs:
 - deployment: deploy_vm1
   timeoutInMinutes: 30
