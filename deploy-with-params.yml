@@ -68,6 +68,7 @@ jobs:
         - bash: |
             echo -e "[all]\n$GET_VM_IP_${{ parameters.vm_ip_name }}" > hosts
             cat hosts
+            printenv
           name: 'create_ansible_hosts'
           displayName: 'Create Ansible hosts file'
 
