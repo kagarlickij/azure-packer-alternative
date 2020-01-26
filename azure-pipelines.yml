@@ -98,7 +98,7 @@ stages:
       import_vm_ip_name: 'VM1_IP'
       import_vm_ip_job_name: 'deploy_vm1'
       ansible_playbook_path: ansible/$(prodVm2Name)/release-playbook.yml
-      ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=${{ parameters.import_vm_ip_name }}'
+      ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) $(VM1_IP)'
 
   # jobs:
   # - deployment: deploy_vm1
