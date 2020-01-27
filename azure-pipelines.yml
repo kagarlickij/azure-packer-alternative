@@ -91,6 +91,29 @@ stages:
       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
       vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
 
+- stage: prv_env_prepare
+  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+  variables:
+  - group: azure-prod-vm1
+  - group: azure-prod-vm2
+  - group: azure-prod-vm3
+  jobs:
+  - template: jobs/prepare.yml
+    parameters:
+      name: 'create_vm1_rg'
+      variable_group1: 'azure-prod-vm1'
+      rg_name: '$(prodVm1ResourceGroupName)-prv'
+  - template: jobs/prepare.yml
+    parameters:
+      name: 'create_vm2_rg'
+      variable_group1: 'azure-prod-vm2'
+      rg_name: '$(prodVm2ResourceGroupName)-prv'
+  - template: jobs/prepare.yml
+    parameters:
+      name: 'create_vm3_rg'
+      variable_group1: 'azure-prod-vm3'
+      rg_name: '$(prodVm3ResourceGroupName)-prv'
+
 - stage: prv_build
   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   variables:
@@ -137,21 +160,6 @@ stages:
   - group: azure-prod-vm2
   - group: azure-prod-vm3
   jobs:
-  - template: jobs/prepare.yml
-    parameters:
-      name: 'create_vm1_rg'
-      variable_group1: 'azure-prod-vm1'
-      rg_name: '$(prodVm1ResourceGroupName)-prv'
-  - template: jobs/prepare.yml
-    parameters:
-      name: 'create_vm2_rg'
-      variable_group1: 'azure-prod-vm2'
-      rg_name: '$(prodVm2ResourceGroupName)-prv'
-  - template: jobs/prepare.yml
-    parameters:
-      name: 'create_vm3_rg'
-      variable_group1: 'azure-prod-vm3'
-      rg_name: '$(prodVm3ResourceGroupName)-prv'
   - template: jobs/deploy.yml
     parameters:
       environment: 'sbx-prv'
@@ -170,6 +178,14 @@ stages:
       vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
       vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
+
+- stage: prv_env_cleanup
+  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+  variables:
+  - group: azure-prod-vm1
+  - group: azure-prod-vm2
+  - group: azure-prod-vm3
+  jobs:
   - template: jobs/cleanup.yml
     parameters:
       name: 'delete_vm1'
