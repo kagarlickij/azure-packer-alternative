@@ -126,9 +126,6 @@ stages:
       parameters:
         rg_name: '$(prodVm3ResourceGroupName)-prv'
 
-
-
-
 # - stage: prv_build
 #   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
 #   variables:
@@ -195,8 +192,14 @@ stages:
       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
       vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
 
+- stage: prv_env_cleanup
+  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+  variables:
+  - group: azure-prod-vm1
+  - group: azure-prod-vm2
+  - group: azure-prod-vm3
+  jobs:
   - job: cleanup_vm1
-    # dependsOn:
     condition: succeeded()
     timeoutInMinutes: 30
     pool:
@@ -209,7 +212,6 @@ stages:
         rg_name: '$(prodVm1ResourceGroupName)-prv'
 
   - job: cleanup_vm2
-    dependsOn: cleanup_vm1
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -221,7 +223,6 @@ stages:
         rg_name: '$(prodVm2ResourceGroupName)-prv'
 
   - job: cleanup_vm3
-    dependsOn: cleanup_vm2
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
