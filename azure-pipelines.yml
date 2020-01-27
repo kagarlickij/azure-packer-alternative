@@ -91,7 +91,7 @@ stages:
         inlineScript: |
           az group create --name '$(prodVm1ResourceGroupName)' --location '$(prodVmRegion)'
         failOnStandardError: true
-      name: 'create_rg'
+      name: 'create_rg1'
       displayName: 'Create Resource Group for VM1'
 
     - task: AzureCLI@1
@@ -101,7 +101,7 @@ stages:
         inlineScript: |
           az group create --name '$(prodVm2ResourceGroupName)' --location '$(prodVmRegion)'
         failOnStandardError: true
-      name: 'create_rg'
+      name: 'create_rg2'
       displayName: 'Create Resource Group for VM2'
 
     - task: AzureCLI@1
@@ -111,7 +111,7 @@ stages:
         inlineScript: |
           az group create --name '$(prodVm3ResourceGroupName)' --location '$(prodVmRegion)'
         failOnStandardError: true
-      name: 'create_rg'
+      name: 'create_rg3'
       displayName: 'Create Resource Group for VM3'
 
   - template: deploy-with-params.yml
