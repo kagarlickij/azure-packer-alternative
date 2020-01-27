@@ -72,6 +72,36 @@ stages:
   - group: azure-prod-vm2
   - group: azure-prod-vm3
   jobs:
+  - task: AzureCLI@1
+    inputs:
+      azureSubscription: $(azureSubscription)
+      scriptLocation: inlineScript
+      inlineScript: |
+        az group create --name '$(prodVm1ResourceGroupName)' --location '$(prodVmRegion)'
+      failOnStandardError: true
+    name: 'create_rg'
+    displayName: 'Create Resource Group for VM1'
+
+  - task: AzureCLI@1
+    inputs:
+      azureSubscription: $(azureSubscription)
+      scriptLocation: inlineScript
+      inlineScript: |
+        az group create --name '$(prodVm2ResourceGroupName)' --location '$(prodVmRegion)'
+      failOnStandardError: true
+    name: 'create_rg'
+    displayName: 'Create Resource Group for VM2'
+
+  - task: AzureCLI@1
+    inputs:
+      azureSubscription: $(azureSubscription)
+      scriptLocation: inlineScript
+      inlineScript: |
+        az group create --name '$(prodVm3ResourceGroupName)' --location '$(prodVmRegion)'
+      failOnStandardError: true
+    name: 'create_rg'
+    displayName: 'Create Resource Group for VM3'
+
   - template: deploy-with-params.yml
     parameters:
       environment: 'sbx'
