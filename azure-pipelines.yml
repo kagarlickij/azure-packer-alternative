@@ -170,21 +170,21 @@ stages:
       vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
       vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
-  # - template: jobs/cleanup.yml
-  #   parameters:
-  #     name: 'delete_vm1'
-  #     variable_group1: 'azure-prod-vm1'
-  #     vm_name: '$(prodVm1Name)-prv'
-  #     rg_name: '$(prodVm1ResourceGroupName)-prv'
-  # - template: jobs/cleanup.yml
-  #   parameters:
-  #     name: 'delete_vm2'
-  #     variable_group1: 'azure-prod-vm2'
-  #     vm_name: '$(prodVm2Name)-prv'
-  #     rg_name: '$(prodVm2ResourceGroupName)-prv'
-  # - template: jobs/cleanup.yml
-  #   parameters:
-  #     name: 'delete_vm3'
-  #     variable_group1: 'azure-prod-vm3'
-  #     vm_name: '$(prodVm3Name)-prv'
-  #     rg_name: '$(prodVm3ResourceGroupName)-prv'
+  - template: jobs/cleanup.yml
+    parameters:
+      name: 'delete_vm1'
+      variable_group1: 'azure-prod-vm1'
+      vm_name: '$(prodVm1Name)-prv'
+      rg_name: '$(prodVm1ResourceGroupName)-prv'
+  - template: jobs/cleanup.yml
+    parameters:
+      name: 'delete_vm2'
+      variable_group1: 'azure-prod-vm2'
+      vm_name: '$(prodVm2Name)-prv'
+      rg_name: '$(prodVm2ResourceGroupName)-prv'
+  - template: jobs/cleanup.yml
+    parameters:
+      name: 'delete_vm3'
+      variable_group1: 'azure-prod-vm3'
+      vm_name: '$(prodVm3Name)-prv'
+      rg_name: '$(prodVm3ResourceGroupName)-prv'
