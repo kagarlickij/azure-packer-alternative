@@ -131,17 +131,17 @@ stages:
   jobs:
   - template: prepare-with-params.yml
     parameters:
-      name: 'prepare_vm1'
+      name: 'create_rg1'
       variable_group1: 'azure-prod-vm1'
       rg_name: '$(prodVm1ResourceGroupName)-prv'
   - template: prepare-with-params.yml
     parameters:
-      name: 'prepare_vm2'
+      name: 'create_rg2'
       variable_group1: 'azure-prod-vm2'
       rg_name: '$(prodVm2ResourceGroupName)-prv'
   - template: prepare-with-params.yml
     parameters:
-      name: 'prepare_vm3'
+      name: 'create_rg3'
       variable_group1: 'azure-prod-vm3'
       rg_name: '$(prodVm3ResourceGroupName)-prv'
 
