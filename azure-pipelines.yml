@@ -145,7 +145,7 @@ stages:
         rg_name: '$(prodVm3ResourceGroupName)-prv'
 
 - stage: prv_build
-  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
+  condition: succeeded()
   dependsOn: prv_env_prepare
   variables:
   - group: ansible-build-common
