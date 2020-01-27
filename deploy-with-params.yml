@@ -26,37 +26,6 @@ jobs:
     runOnce:
       deploy:
         steps:
-
-        - task: AzureCLI@1
-          inputs:
-            azureSubscription: $(azureSubscription)
-            scriptLocation: inlineScript
-            inlineScript: |
-              az group create --name '${{ parameters.vm1_rg_name }}' --location '$(prodVmRegion)'
-            failOnStandardError: true
-          name: 'create_rg1'
-          displayName: 'Create Resource Group for VM1'
-
-        - task: AzureCLI@1
-          inputs:
-            azureSubscription: $(azureSubscription)
-            scriptLocation: inlineScript
-            inlineScript: |
-              az group create --name '${{ parameters.vm2_rg_name }}' --location '$(prodVmRegion)'
-            failOnStandardError: true
-          name: 'create_rg2'
-          displayName: 'Create Resource Group for VM2'
-
-        - task: AzureCLI@1
-          inputs:
-            azureSubscription: $(azureSubscription)
-            scriptLocation: inlineScript
-            inlineScript: |
-              az group create --name '${{ parameters.vm3_rg_name }}' --location '$(prodVmRegion)'
-            failOnStandardError: true
-          name: 'create_rg3'
-          displayName: 'Create Resource Group for VM3'
-
         - task: AzureCLI@1
           inputs:
             azureSubscription: $(azureSubscription)
