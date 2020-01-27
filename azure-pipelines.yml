@@ -87,6 +87,9 @@ stages:
       vm1_size: '$(prodVm1Size)'
       vm2_size: '$(prodVm2Size)'
       vm3_size: '$(prodVm3Size)'
+      vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
+      vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
+      vm3_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
 
 # - stage: PRV_Build
 #   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
@@ -183,6 +186,9 @@ stages:
       vm1_size: '$(prodVm1Size)'
       vm2_size: '$(prodVm2Size)'
       vm3_size: '$(prodVm3Size)'
+      vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
+      vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
+      vm3_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
 
 # - stage: PRV_Cleanup
 #   condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))

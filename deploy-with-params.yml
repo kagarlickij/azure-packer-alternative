@@ -12,6 +12,9 @@ parameters:
   vm1_size: ''
   vm2_size: ''
   vm3_size: ''
+  vm1_ansible_playbook_path: ''
+  vm2_ansible_playbook_path: ''
+  vm3_ansible_playbook_path: ''
 
 jobs:
 - deployment: deploy_vm1
@@ -75,7 +78,7 @@ jobs:
             ansible-playbook
             -vvvv
             -i hosts
-            ansible/${{ parameters.vm1_name }}/release-playbook.yml
+            ${{ parameters.vm1_ansible_playbook_path }}
             --extra-vars='
             ansible_user=$(ansibleUser)
             ansible_password=$(ansibleUserPass)
@@ -171,7 +174,7 @@ jobs:
             ansible-playbook
             -vvvv
             -i hosts
-            ansible/${{ parameters.vm2_name }}/release-playbook.yml
+            ${{ parameters.vm2_ansible_playbook_path }}
             --extra-vars='
             ansible_user=$(ansibleUser)
             ansible_password=$(ansibleUserPass)
@@ -271,7 +274,7 @@ jobs:
             ansible-playbook
             -vvvv
             -i hosts
-            ansible/${{ parameters.vm3_name }}/release-playbook.yml
+            ${{ parameters.vm3_ansible_playbook_path }}
             --extra-vars='
             ansible_user=$(ansibleUser)
             ansible_password=$(ansibleUserPass)
