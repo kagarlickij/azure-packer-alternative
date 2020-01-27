@@ -108,7 +108,6 @@ stages:
       parameters:
         rg_name: '$(prodVm1ResourceGroupName)-prv'
   - job: create_vm2_rg
-    dependsOn: create_vm1_rg
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -118,7 +117,6 @@ stages:
       parameters:
         rg_name: '$(prodVm2ResourceGroupName)-prv'
   - job: create_vm3_rg
-    dependsOn: create_vm2_rg
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
