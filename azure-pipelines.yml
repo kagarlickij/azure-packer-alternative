@@ -208,7 +208,6 @@ stages:
   #     vm_name: '$(prodVm3Name)-prv'
   #     rg_name: '$(prodVm3ResourceGroupName)-prv'
 
-
 # - stage: OBSOLETE_PRV_Cleanup
 #   condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
 #   jobs:
