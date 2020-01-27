@@ -88,7 +88,7 @@ stages:
       vm2_size: '$(prodVm2Size)'
       vm3_size: '$(prodVm3Size)'
 
-- stage: PRV-Build
+- stage: PRV_Build
   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   variables:
   - group: ansible-build-common
@@ -126,7 +126,7 @@ stages:
       ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-- stage: PRV-Deploy
+- stage: PRV_Deploy
   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   variables:
   - group: ansible-deploy-common
@@ -150,7 +150,7 @@ stages:
       vm2_size: '$(prodVm2Size)'
       vm3_size: '$(prodVm3Size)'
 
-# - stage: PRV-Cleanup
+# - stage: PRV_Cleanup
 #   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
 #   jobs:
 #   - template: delete-with-params.yml
