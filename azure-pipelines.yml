@@ -127,7 +127,7 @@ stages:
 #       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
 - stage: PRV_Prepare
-  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
+  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   variables:
   - group: azure-prod-vm1
   - group: azure-prod-vm2
