@@ -128,10 +128,6 @@ stages:
 
 - stage: PRV_Prepare
   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
-  variables:
-  - group: azure-prod-vm1
-  - group: azure-prod-vm2
-  - group: azure-prod-vm3
   jobs:
   - template: prepare-with-params.yml
     parameters:

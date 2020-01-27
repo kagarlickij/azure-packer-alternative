@@ -22,7 +22,7 @@ jobs:
       azureSubscription: $(azureSubscription)
       scriptLocation: inlineScript
       inlineScript: |
-        az group create --name '${{ parameters.vm_rg_name }}' --location '$(prodVmRegion)'
+        az group create --name '${{ parameters.rg_name }}' --location '$(prodVmRegion)'
       failOnStandardError: true
     name: 'create_rg'
     displayName: 'Create Resource group'
