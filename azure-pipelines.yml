@@ -146,7 +146,7 @@ stages:
 #       rg_name: '$(prodVm3ResourceGroupName)-prv'
 
 - stage: PRV_Deploy
-  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
+  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   variables:
   - group: ansible-deploy-common
   - group: azure-prod-vm1
