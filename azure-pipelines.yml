@@ -194,6 +194,7 @@ stages:
 
   - job: cleanup_vm1
     # dependsOn:
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -205,7 +206,7 @@ stages:
         rg_name: '$(prodVm1ResourceGroupName)-prv'
 
   - job: cleanup_vm2
-    # dependsOn:
+    dependsOn: cleanup_vm1
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -217,7 +218,7 @@ stages:
         rg_name: '$(prodVm2ResourceGroupName)-prv'
 
   - job: cleanup_vm3
-    # dependsOn:
+    dependsOn: cleanup_vm2
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
