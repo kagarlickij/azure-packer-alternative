@@ -134,7 +134,6 @@ stages:
   - group: azure-prod-vm2
   - group: azure-prod-vm3
 
-  jobs:
   - template: deploy-with-params.yml
     parameters:
       environment: 'sbx-prv'
