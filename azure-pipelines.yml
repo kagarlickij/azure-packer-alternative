@@ -74,7 +74,7 @@ stages:
 
 
   jobs:
-  - job: 'Create Resource Groups'
+  - job: 'create_rgs'
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
