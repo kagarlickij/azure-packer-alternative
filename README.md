@@ -65,7 +65,7 @@ There are a few ways to run builds in parallel, but all of them don't work:
 ## Templates
 Pipeline has some repeating steps which are moved to `./templates` to avoid code duplication  
 Templates are not plugins so some pieces (e.g network settings) are "hardcoded"  
-Template types are Step and Stage because Job type (probably the most convenient one) [can not be used as dependency for other jobs](https://stackoverflow.com/questions/59937679/azure-devops-template-as-a-dependency-for-a-job?noredirect=1#comment105997940_59937679)
+Template types are Job (for deploy) and Step (for all other) not because of the most suitable kind but because [templates can not be used as dependency for other jobs/stages/etc](https://stackoverflow.com/questions/59937679/azure-devops-template-as-a-dependency-for-a-job?noredirect=1#comment105997940_59937679)  
 
 # Manual execution (CLI on local machine)
 Deprecated because of complexity with variables
