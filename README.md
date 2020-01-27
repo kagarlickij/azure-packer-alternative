@@ -51,12 +51,21 @@ Environment in ADOS Pipelines will be created automatically by Pipeline
 [Deploy notifications don't work in ADOS yet](https://stackoverflow.com/questions/59702813/azure-devops-doesnt-send-deployment-approval/)  
 
 # Azure DevOps pipeline
-Pipeline supports Pull requests verification and VM image build and deploy based on commit to mainline (`master` branch)  
+## Production vs Pull request verification
+Pipeline supports Pull requests verification (on Pull request to `master` branch) and VM image build and "production" deploy (on commit to `master` branch)  
+Pull request verification (PRV) builds and deploys image to temporary environment  
+If PRV Build & Deploy are successful, code snapshot is marked as valid for merging and tmp environment is deleted  
+If PRV Build & Deploy failed code snapshot is marked as invalid and tmp environment is not deleted for manual investigation  
+## Agent and network
 Azure DevOps agent must have access to the virtual network that is used for VM image build  
 Azure DevOps pipeline is executed in Docker [kagarlickij/packer-ansible-azure-docker-runtime:2.0.0](https://hub.docker.com/repository/registry-1.docker.io/kagarlickij/packer-ansible-azure-docker-runtime/builds/433e143e-9a1f-445d-b8df-31477e3600bb) runtime with preinstalled Packer, Ansible, Azure CLI and necessary Python packages  
 There are a few ways to run builds in parallel, but all of them don't work:  
 1. Use multiple `builders` in template.json. It [doesn't work](https://stackoverflow.com/questions/59864732/packer-dedicated-provisioners-for-builders) because each VM must use dedicated provisioner
-2. Build the same template on multiple agents (VMs or Docker containers) in [parallel](https://docs.microsoft.com/en-us/azure/devops/pipelines/licensing/concurrent-jobs?view=azure-devops) always [fails](https://stackoverflow.com/questions/59864317/packer-azure-arm-fails-when-running-in-parallel )
+2. Build the same template on multiple agents (VMs or Docker containers) in [parallel](https://docs.microsoft.com/en-us/azure/devops/pipelines/licensing/concurrent-jobs?view=azure-devops) always [fails](https://stackoverflow.com/questions/59864317/packer-azure-arm-fails-when-running-in-parallel )  
+## Templates
+Pipeline has some repeating steps which are moved to `./templates` to avoid code duplication  
+Templates are not plugins so some pieces (e.g network settings) are "hardcoded"  
+Template types are Step and Stage because Job type (probably the most convenient one) [can not be used as dependency for other jobs](https://stackoverflow.com/questions/59937679/azure-devops-template-as-a-dependency-for-a-job?noredirect=1#comment105997940_59937679)
 
 # Manual execution (CLI on local machine)
 Deprecated because of complexity with variables
