@@ -1,47 +1,35 @@
 parameters:
-  name: ''
-  variable_group1: ''
-  variable_group2: ''
-  template_path: ''
   vm_name: ''
+  template_path: ''
   ansible_playbook_path: ''
   ansible_extra_vars: ''
 
-jobs:
-- job: ${{ parameters.name }}
-  timeoutInMinutes: 30
-  pool:
-    name: 'Self-Hosted'
-  container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-  variables:
-  - group: ${{ parameters.variable_group1 }}
-  - group: ${{ parameters.variable_group2 }}
-  steps:
-  - checkout: self
-    clean: true
-    persistCredentials: false
-    submodules: false
-  - task: riezebosch.Packer.Packer.Packer@1
-    displayName: 'Build image'
-    inputs:
-      connectedServiceType: 'azure'
-      azureSubscription: $(azureSubscription)
-      templatePath: ${{ parameters.template_path }}
-      command: 'build'
-      force: true
-      variables: |
-        project=$(project)
-        environment=$(environment)
-        azure_client_id=$(azureClientId)
-        azure_client_secret=$(azureClientSecret)
-        azure_tenant_id=$(azureTenantId)
-        azure_subscription_id=$(azureSubscriptionId)
-        packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
-        packer_vnet_name=$(packerVnetName)
-        packer_vnet_subnet_name=$(packerVnetSubnetName)
-        packer_images_resource_group_name=$(packerImagesResourceGroupName)
-        packer_image_name=${{ parameters.vm_name }}
-        ansible_playbook_path=${{ parameters.ansible_playbook_path }}
-        ansible_user=$(ansibleUser)
-        ansible_user_password=$(ansibleUserPass)
-        ansible_extra_vars=${{ parameters.ansible_extra_vars }}
+steps:
+- checkout: self
+  clean: true
+  persistCredentials: false
+  submodules: false
+- task: riezebosch.Packer.Packer.Packer@1
+  displayName: 'Build image'
+  inputs:
+    connectedServiceType: 'azure'
+    azureSubscription: $(azureSubscription)
+    templatePath: ${{ parameters.template_path }}
+    command: 'build'
+    force: true
+    variables: |
+      project=$(project)
+      environment=$(environment)
+      azure_client_id=$(azureClientId)
+      azure_client_secret=$(azureClientSecret)
+      azure_tenant_id=$(azureTenantId)
+      azure_subscription_id=$(azureSubscriptionId)
+      packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
+      packer_vnet_name=$(packerVnetName)
+      packer_vnet_subnet_name=$(packerVnetSubnetName)
+      packer_images_resource_group_name=$(packerImagesResourceGroupName)
+      packer_image_name=${{ parameters.vm_name }}
+      ansible_playbook_path=${{ parameters.ansible_playbook_path }}
+      ansible_user=$(ansibleUser)
+      ansible_user_password=$(ansibleUserPass)
+      ansible_extra_vars=${{ parameters.ansible_extra_vars }}
