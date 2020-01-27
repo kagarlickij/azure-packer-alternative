@@ -29,7 +29,7 @@ variables:
 - group: ansible-windows-creds
 
 stages:
-- stage: Build
+- stage: build
   condition: ne(variables['Build.Reason'], 'PullRequest')
   variables:
   - group: ansible-build-common
@@ -64,7 +64,7 @@ stages:
       ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-- stage: Deploy
+- stage: deploy
   condition: ne(variables['Build.Reason'], 'PullRequest')
   variables:
   - group: ansible-deploy-common
@@ -91,7 +91,7 @@ stages:
       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
       vm3_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
 
-# - stage: PRV_Build
+# - stage: prv_build
 #   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
 #   variables:
 #   - group: ansible-build-common
@@ -129,7 +129,7 @@ stages:
 #       ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
 #       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-- stage: PRV_Deploy
+- stage: prv_deploy
   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   variables:
   - group: ansible-deploy-common
@@ -139,17 +139,17 @@ stages:
   jobs:
   - template: jobs/prepare.yml
     parameters:
-      name: 'create_rg1'
+      name: 'create_vm1_rg'
       variable_group1: 'azure-prod-vm1'
       rg_name: '$(prodVm1ResourceGroupName)-prv'
   - template: jobs/prepare.yml
     parameters:
-      name: 'create_rg2'
+      name: 'create_vm2_rg'
       variable_group1: 'azure-prod-vm2'
       rg_name: '$(prodVm2ResourceGroupName)-prv'
   - template: jobs/prepare.yml
     parameters:
-      name: 'create_rg3'
+      name: 'create_vm3_rg'
       variable_group1: 'azure-prod-vm3'
       rg_name: '$(prodVm3ResourceGroupName)-prv'
   - template: jobs/deploy.yml
