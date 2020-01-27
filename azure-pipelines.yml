@@ -127,7 +127,7 @@ stages:
 #       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
 - stage: PRV_Prepare
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
   variables:
   - group: azure-prod-vm1
   - group: azure-prod-vm2
@@ -150,7 +150,7 @@ stages:
       rg_name: '$(prodVm3ResourceGroupName)-prv'
 
 - stage: PRV_Deploy
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
   variables:
   - group: ansible-deploy-common
   - group: azure-prod-vm1
@@ -174,7 +174,7 @@ stages:
       vm3_size: '$(prodVm3Size)'
 
 # - stage: PRV_Cleanup
-#   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+#   condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
 #   jobs:
 #   - template: cleanup-with-params.yml
 #     parameters:
