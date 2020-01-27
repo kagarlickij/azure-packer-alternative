@@ -3,7 +3,6 @@ parameters:
   variable_group1: ''
   variable_group2: ''
   template_path: ''
-  build_container: ''
   vm_name: ''
   ansible_playbook_path: ''
   ansible_extra_vars: ''
@@ -13,7 +12,7 @@ jobs:
   timeoutInMinutes: 30
   pool:
     name: 'Self-Hosted'
-  container: ${{ parameters.build_container }}
+  container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
   variables:
   - group: ${{ parameters.variable_group1 }}
   - group: ${{ parameters.variable_group2 }}
