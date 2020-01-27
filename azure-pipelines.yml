@@ -150,26 +150,26 @@ stages:
       vm2_size: '$(prodVm2Size)'
       vm3_size: '$(prodVm3Size)'
 
-- stage: PRV-Cleanup
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
-  jobs:
-  - template: delete-with-params.yml
-    parameters:
-      name: 'delete_vm1'
-      variable_group1: 'azure-prod-vm1'
-      vm_name: '$(prodVm1Name)-prv'
-      rg_name: '$(prodVm1ResourceGroupName)-prv'
+# - stage: PRV-Cleanup
+#   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+#   jobs:
+#   - template: delete-with-params.yml
+#     parameters:
+#       name: 'delete_vm1'
+#       variable_group1: 'azure-prod-vm1'
+#       vm_name: '$(prodVm1Name)-prv'
+#       rg_name: '$(prodVm1ResourceGroupName)-prv'
 
-  - template: delete-with-params.yml
-    parameters:
-      name: 'delete_vm2'
-      variable_group1: 'azure-prod-vm2'
-      vm_name: '$(prodVm2Name)-prv'
-      rg_name: '$(prodVm2ResourceGroupName)-prv'
+#   - template: delete-with-params.yml
+#     parameters:
+#       name: 'delete_vm2'
+#       variable_group1: 'azure-prod-vm2'
+#       vm_name: '$(prodVm2Name)-prv'
+#       rg_name: '$(prodVm2ResourceGroupName)-prv'
 
-  - template: delete-with-params.yml
-    parameters:
-      name: 'delete_vm3'
-      variable_group1: 'azure-prod-vm3'
-      vm_name: '$(prodVm3Name)-prv'
-      rg_name: '$(prodVm3ResourceGroupName)-prv'
+#   - template: delete-with-params.yml
+#     parameters:
+#       name: 'delete_vm3'
+#       variable_group1: 'azure-prod-vm3'
+#       vm_name: '$(prodVm3Name)-prv'
+#       rg_name: '$(prodVm3ResourceGroupName)-prv'
