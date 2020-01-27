@@ -98,109 +98,109 @@ stages:
   - group: azure-prod-vm2
   - group: azure-prod-vm3
   jobs:
-  - template: jobs/prepare.yml
-    parameters:
-      name: 'create_vm1_rg'
-      variable_group1: 'azure-prod-vm1'
-      rg_name: '$(prodVm1ResourceGroupName)-prv'
-  - template: jobs/prepare.yml
-    parameters:
-      name: 'create_vm2_rg'
-      variable_group1: 'azure-prod-vm2'
-      rg_name: '$(prodVm2ResourceGroupName)-prv'
-  - template: jobs/prepare.yml
-    parameters:
-      name: 'create_vm3_rg'
-      variable_group1: 'azure-prod-vm3'
-      rg_name: '$(prodVm3ResourceGroupName)-prv'
+  - job: ${{ parameters.name }}
+    timeoutInMinutes: 30
+    pool:
+      name: 'Self-Hosted'
+    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+    steps:
+    - template: jobs/prepare.yml
+      parameters:
+        rg_name: '$(prodVm1ResourceGroupName)-prv'
+    - template: jobs/prepare.yml
+      parameters:
+        rg_name: '$(prodVm2ResourceGroupName)-prv'
+    - template: jobs/prepare.yml
+      parameters:
+        rg_name: '$(prodVm3ResourceGroupName)-prv'
 
-- stage: prv_build
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
-  variables:
-  - group: ansible-build-common
-  jobs:
-  - template: jobs/build.yml
-    parameters:
-      name: 'build_vm1'
-      variable_group1: 'azure-prod-vm1'
-      variable_group2: 'ansible-build-vm1'
-      template_path: 'template.json'
-      build_container: 'kagarlickij/packer-ansible-azure-docker-runtime:2.0.0'
-      vm_name: '$(prodVm1Name)-prv'
-      ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
-      ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+# - stage: prv_build
+#   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+#   variables:
+#   - group: ansible-build-common
+#   jobs:
+#   - template: jobs/build.yml
+#     parameters:
+#       name: 'build_vm1'
+#       variable_group1: 'azure-prod-vm1'
+#       variable_group2: 'ansible-build-vm1'
+#       template_path: 'template.json'
+#       build_container: 'kagarlickij/packer-ansible-azure-docker-runtime:2.0.0'
+#       vm_name: '$(prodVm1Name)-prv'
+#       ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
+#       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - template: jobs/build.yml
-    parameters:
-      name: 'build_vm2'
-      variable_group1: 'azure-prod-vm2'
-      variable_group2: 'ansible-build-vm2'
-      template_path: 'template.json'
-      build_container: 'kagarlickij/packer-ansible-azure-docker-runtime:2.0.0'
-      vm_name: '$(prodVm2Name)-prv'
-      ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
-      ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+#   - template: jobs/build.yml
+#     parameters:
+#       name: 'build_vm2'
+#       variable_group1: 'azure-prod-vm2'
+#       variable_group2: 'ansible-build-vm2'
+#       template_path: 'template.json'
+#       build_container: 'kagarlickij/packer-ansible-azure-docker-runtime:2.0.0'
+#       vm_name: '$(prodVm2Name)-prv'
+#       ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
+#       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - template: jobs/build.yml
-    parameters:
-      name: 'build_vm3'
-      variable_group1: 'azure-prod-vm3'
-      variable_group2: 'ansible-build-vm3'
-      template_path: 'template.json'
-      build_container: 'kagarlickij/packer-ansible-azure-docker-runtime:2.0.0'
-      vm_name: '$(prodVm3Name)-prv'
-      ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
-      ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+#   - template: jobs/build.yml
+#     parameters:
+#       name: 'build_vm3'
+#       variable_group1: 'azure-prod-vm3'
+#       variable_group2: 'ansible-build-vm3'
+#       template_path: 'template.json'
+#       build_container: 'kagarlickij/packer-ansible-azure-docker-runtime:2.0.0'
+#       vm_name: '$(prodVm3Name)-prv'
+#       ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
+#       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-- stage: prv_deploy
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
-  variables:
-  - group: ansible-deploy-common
-  - group: azure-prod-vm1
-  - group: azure-prod-vm2
-  - group: azure-prod-vm3
-  jobs:
-  - template: jobs/deploy.yml
-    parameters:
-      environment: 'sbx-prv'
-      vm1_name: '$(prodVm1Name)-prv'
-      vm2_name: '$(prodVm2Name)-prv'
-      vm3_name: '$(prodVm3Name)-prv'
-      vm1_rg_name: '$(prodVm1ResourceGroupName)-prv'
-      vm2_rg_name: '$(prodVm2ResourceGroupName)-prv'
-      vm3_rg_name: '$(prodVm3ResourceGroupName)-prv'
-      vm1_kv_name: '$(prodVm1KvName)-prv'
-      vm2_kv_name: '$(prodVm2KvName)-prv'
-      vm3_kv_name: '$(prodVm3KvName)-prv'
-      vm1_size: '$(prodVm1Size)'
-      vm2_size: '$(prodVm2Size)'
-      vm3_size: '$(prodVm3Size)'
-      vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
-      vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
-      vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
+# - stage: prv_deploy
+#   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+#   variables:
+#   - group: ansible-deploy-common
+#   - group: azure-prod-vm1
+#   - group: azure-prod-vm2
+#   - group: azure-prod-vm3
+#   jobs:
+#   - template: jobs/deploy.yml
+#     parameters:
+#       environment: 'sbx-prv'
+#       vm1_name: '$(prodVm1Name)-prv'
+#       vm2_name: '$(prodVm2Name)-prv'
+#       vm3_name: '$(prodVm3Name)-prv'
+#       vm1_rg_name: '$(prodVm1ResourceGroupName)-prv'
+#       vm2_rg_name: '$(prodVm2ResourceGroupName)-prv'
+#       vm3_rg_name: '$(prodVm3ResourceGroupName)-prv'
+#       vm1_kv_name: '$(prodVm1KvName)-prv'
+#       vm2_kv_name: '$(prodVm2KvName)-prv'
+#       vm3_kv_name: '$(prodVm3KvName)-prv'
+#       vm1_size: '$(prodVm1Size)'
+#       vm2_size: '$(prodVm2Size)'
+#       vm3_size: '$(prodVm3Size)'
+#       vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
+#       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
+#       vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
 
-- stage: prv_env_cleanup
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
-  variables:
-  - group: azure-prod-vm1
-  - group: azure-prod-vm2
-  - group: azure-prod-vm3
-  jobs:
-  - template: jobs/cleanup.yml
-    parameters:
-      name: 'delete_vm1'
-      variable_group1: 'azure-prod-vm1'
-      vm_name: '$(prodVm1Name)-prv'
-      rg_name: '$(prodVm1ResourceGroupName)-prv'
-  - template: jobs/cleanup.yml
-    parameters:
-      name: 'delete_vm2'
-      variable_group1: 'azure-prod-vm2'
-      vm_name: '$(prodVm2Name)-prv'
-      rg_name: '$(prodVm2ResourceGroupName)-prv'
-  - template: jobs/cleanup.yml
-    parameters:
-      name: 'delete_vm3'
-      variable_group1: 'azure-prod-vm3'
-      vm_name: '$(prodVm3Name)-prv'
-      rg_name: '$(prodVm3ResourceGroupName)-prv'
+# - stage: prv_env_cleanup
+#   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+#   variables:
+#   - group: azure-prod-vm1
+#   - group: azure-prod-vm2
+#   - group: azure-prod-vm3
+#   jobs:
+#   - template: jobs/cleanup.yml
+#     parameters:
+#       name: 'delete_vm1'
+#       variable_group1: 'azure-prod-vm1'
+#       vm_name: '$(prodVm1Name)-prv'
+#       rg_name: '$(prodVm1ResourceGroupName)-prv'
+#   - template: jobs/cleanup.yml
+#     parameters:
+#       name: 'delete_vm2'
+#       variable_group1: 'azure-prod-vm2'
+#       vm_name: '$(prodVm2Name)-prv'
+#       rg_name: '$(prodVm2ResourceGroupName)-prv'
+#   - template: jobs/cleanup.yml
+#     parameters:
+#       name: 'delete_vm3'
+#       variable_group1: 'azure-prod-vm3'
+#       vm_name: '$(prodVm3Name)-prv'
+#       rg_name: '$(prodVm3ResourceGroupName)-prv'
