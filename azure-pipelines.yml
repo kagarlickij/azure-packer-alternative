@@ -89,7 +89,7 @@ stages:
       vm3_size: '$(prodVm3Size)'
       vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
-      vm3_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
+      vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
 
 # - stage: prv_build
 #   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
@@ -169,7 +169,7 @@ stages:
       vm3_size: '$(prodVm3Size)'
       vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
-      vm3_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
+      vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
   # - template: jobs/cleanup.yml
   #   parameters:
   #     name: 'delete_vm1'
