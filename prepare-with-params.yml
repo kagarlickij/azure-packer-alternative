@@ -1,0 +1,28 @@
+parameters:
+  name: ''
+  variable_group1: ''
+  rg_name: ''
+
+jobs:
+- job: ${{ parameters.name }}
+  timeoutInMinutes: 30
+  pool:
+    name: 'Self-Hosted'
+  container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+  variables:
+  - group: ${{ parameters.variable_group1 }}
+  steps:
+  - checkout: self
+    clean: true
+    persistCredentials: false
+    submodules: false
+  - task: AzureCLI@1
+    condition: succeeded()
+    inputs:
+      azureSubscription: $(azureSubscription)
+      scriptLocation: inlineScript
+      inlineScript: |
+        az group create --name '${{ parameters.vm_rg_name }}' --location '$(prodVmRegion)'
+      failOnStandardError: true
+    name: 'create_rg'
+    displayName: 'Create Resource group'

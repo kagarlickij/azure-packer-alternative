@@ -126,6 +126,25 @@ stages:
 #       ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
 #       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
+- stage: PRV_Prepare
+  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+  jobs:
+  - template: prepare-with-params.yml
+    parameters:
+      name: 'prepare_vm1'
+      variable_group1: 'azure-prod-vm1'
+      rg_name: '$(prodVm1ResourceGroupName)-prv'
+  - template: prepare-with-params.yml
+    parameters:
+      name: 'prepare_vm2'
+      variable_group1: 'azure-prod-vm2'
+      rg_name: '$(prodVm2ResourceGroupName)-prv'
+  - template: prepare-with-params.yml
+    parameters:
+      name: 'prepare_vm3'
+      variable_group1: 'azure-prod-vm3'
+      rg_name: '$(prodVm3ResourceGroupName)-prv'
+
 - stage: PRV_Deploy
   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   variables:
@@ -153,21 +172,21 @@ stages:
 # - stage: PRV_Cleanup
 #   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
 #   jobs:
-#   - template: delete-with-params.yml
+#   - template: cleanup-with-params.yml
 #     parameters:
 #       name: 'delete_vm1'
 #       variable_group1: 'azure-prod-vm1'
 #       vm_name: '$(prodVm1Name)-prv'
 #       rg_name: '$(prodVm1ResourceGroupName)-prv'
 
-#   - template: delete-with-params.yml
+#   - template: cleanup-with-params.yml
 #     parameters:
 #       name: 'delete_vm2'
 #       variable_group1: 'azure-prod-vm2'
 #       vm_name: '$(prodVm2Name)-prv'
 #       rg_name: '$(prodVm2ResourceGroupName)-prv'
 
-#   - template: delete-with-params.yml
+#   - template: cleanup-with-params.yml
 #     parameters:
 #       name: 'delete_vm3'
 #       variable_group1: 'azure-prod-vm3'
