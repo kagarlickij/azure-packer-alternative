@@ -153,8 +153,7 @@ stages:
         rg_name: '$(prodVm3ResourceGroupName)-prv'
 
 - stage: prv_build
-  dependsOn:
-  - prv_env_prepare
+  dependsOn: prv_env_prepare
   condition: succeeded()
   variables:
   - group: ansible-build-common
