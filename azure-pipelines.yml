@@ -155,7 +155,7 @@ stages:
 - stage: prv_build
   dependsOn:
   - prv_env_prepare
-  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
+  condition: succeeded()
   variables:
   - group: ansible-build-common
   jobs:
@@ -211,7 +211,7 @@ stages:
   dependsOn:
   - prv_env_prepare
   - prv_build
-  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
+  condition: succeeded()
   variables:
   - group: ansible-deploy-common
   - group: azure-prod-vm1
@@ -242,7 +242,7 @@ stages:
   - prv_env_prepare
   - prv_build
   - prv_deploy
-  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
+  condition: succeeded()
   variables:
   - group: azure-prod-vm1
   - group: azure-prod-vm2
