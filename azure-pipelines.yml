@@ -195,7 +195,7 @@ stages:
       parameters:
         vm_name: '$(prodVm3Name)-prv'
         template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
+        ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
 - stage: prv_deploy
