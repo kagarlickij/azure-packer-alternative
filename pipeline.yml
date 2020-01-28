@@ -29,6 +29,39 @@ variables:
 - group: ansible-windows-creds
 
 stages:
+
+- stage: build
+  condition: ne(variables['Build.Reason'], 'PullRequest')
+  jobs:
+  - job: build_1
+    steps:
+    - bash: |
+        sleep 30
+      name: 'bash'
+  - job: build_2
+    steps:
+    - bash: |
+        sleep 30
+      name: 'bash'
+
+- stage: deploy
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  dependsOn:
+  - build
+  jobs:
+  - job: deploy_1
+    steps:
+    - bash: |
+        sleep 30
+      name: 'bash'
+  - job: deploy_2
+    steps:
+    - bash: |
+        sleep 30
+      name: 'bash'
+
+
+
 - stage: prv_env_prepare
   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   jobs:
