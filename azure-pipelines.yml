@@ -51,9 +51,6 @@ stages:
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
   - job: build_vm2
-    dependsOn:
-    - build_vm1
-    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -70,10 +67,6 @@ stages:
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
   - job: build_vm3
-    dependsOn:
-    - build_vm1
-    - build_vm2
-    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -90,8 +83,7 @@ stages:
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
 - stage: prod_deploy
-  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-  dependsOn: prod_build
+  condition: ne(variables['Build.Reason'], 'PullRequest')
   variables:
   - group: ansible-deploy-common
   - group: azure-prod-vm1
@@ -117,7 +109,7 @@ stages:
       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
       vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
 
-- stage: prv_env_prepare
+- stage: prv
   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
   variables:
   - group: azure-prod-vm1
@@ -134,6 +126,8 @@ stages:
       parameters:
         rg_name: '$(prodVm1ResourceGroupName)-prv'
   - job: create_vm2_rg
+    dependsOn: create_vm1_rg
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -143,6 +137,8 @@ stages:
       parameters:
         rg_name: '$(prodVm2ResourceGroupName)-prv'
   - job: create_vm3_rg
+    dependsOn: create_vm2_rg
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -152,13 +148,9 @@ stages:
       parameters:
         rg_name: '$(prodVm3ResourceGroupName)-prv'
 
-- stage: prv_build
-  dependsOn: prv_env_prepare
-  condition: succeeded()
-  variables:
-  - group: ansible-build-common
-  jobs:
   - job: build_vm1
+    dependsOn: create_vm3_rg
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -166,6 +158,7 @@ stages:
     variables:
     - group: azure-prod-vm1
     - group: ansible-build-vm1
+    - group: ansible-build-common
     steps:
     - template: templates/build.yml
       parameters:
@@ -173,8 +166,9 @@ stages:
         template_path: 'template.json'
         ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-
   - job: build_vm2
+    dependsOn: build_vm1
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -182,6 +176,7 @@ stages:
     variables:
     - group: azure-prod-vm2
     - group: ansible-build-vm2
+    - group: ansible-build-common
     steps:
     - template: templates/build.yml
       parameters:
@@ -189,8 +184,9 @@ stages:
         template_path: 'template.json'
         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-
   - job: build_vm3
+    dependsOn: build_vm2
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
@@ -198,6 +194,7 @@ stages:
     variables:
     - group: azure-prod-vm3
     - group: ansible-build-vm3
+    - group: ansible-build-common
     steps:
     - template: templates/build.yml
       parameters:
@@ -206,74 +203,43 @@ stages:
         ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-- stage: prv_deploy
-  dependsOn:
-  - prv_env_prepare
-  - prv_build
-  condition: succeeded()
-  variables:
-  - group: ansible-deploy-common
-  - group: azure-prod-vm1
-  - group: azure-prod-vm2
-  - group: azure-prod-vm3
-  jobs:
-  - template: templates/deploy.yml
-    parameters:
-      environment: 'sbx-prv'
-      vm1_name: '$(prodVm1Name)-prv'
-      vm2_name: '$(prodVm2Name)-prv'
-      vm3_name: '$(prodVm3Name)-prv'
-      vm1_rg_name: '$(prodVm1ResourceGroupName)-prv'
-      vm2_rg_name: '$(prodVm2ResourceGroupName)-prv'
-      vm3_rg_name: '$(prodVm3ResourceGroupName)-prv'
-      vm1_kv_name: '$(prodVm1KvName)-prv'
-      vm2_kv_name: '$(prodVm2KvName)-prv'
-      vm3_kv_name: '$(prodVm3KvName)-prv'
-      vm1_size: '$(prodVm1Size)'
-      vm2_size: '$(prodVm2Size)'
-      vm3_size: '$(prodVm3Size)'
-      vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
-      vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
-      vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
-
-- stage: prv_env_cleanup
-  dependsOn:
-  - prv_env_prepare
-  - prv_build
-  - prv_deploy
-  condition: succeeded()
-  variables:
-  - group: azure-prod-vm1
-  - group: azure-prod-vm2
-  - group: azure-prod-vm3
-  jobs:
   - job: cleanup_vm1
+    dependsOn: build_vm3
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
     container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+    variables:
+    - group: azure-prod-vm1
     steps:
     - template: templates/cleanup.yml
       parameters:
         vm_name: $(prodVm1Name)-prv
         rg_name: '$(prodVm1ResourceGroupName)-prv'
-
   - job: cleanup_vm2
+    dependsOn: cleanup_vm1
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
     container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+    variables:
+    - group: azure-prod-vm1
     steps:
     - template: templates/cleanup.yml
       parameters:
         vm_name: $(prodVm2Name)-prv
         rg_name: '$(prodVm2ResourceGroupName)-prv'
-
   - job: cleanup_vm3
+    dependsOn: cleanup_vm2
+    condition: succeeded()
     timeoutInMinutes: 30
     pool:
       name: 'Self-Hosted'
     container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+    variables:
+    - group: azure-prod-vm1
     steps:
     - template: templates/cleanup.yml
       parameters:
