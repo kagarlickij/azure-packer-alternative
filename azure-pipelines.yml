@@ -153,8 +153,9 @@ stages:
         rg_name: '$(prodVm3ResourceGroupName)-prv'
 
 - stage: prv_build
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
-  # dependsOn: prv_env_prepare
+  dependsOn:
+  - prv_env_prepare
+  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
   variables:
   - group: ansible-build-common
   jobs:
@@ -207,10 +208,10 @@ stages:
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
 - stage: prv_deploy
-  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
   dependsOn:
   - prv_env_prepare
   - prv_build
+  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
   variables:
   - group: ansible-deploy-common
   - group: azure-prod-vm1
@@ -237,8 +238,11 @@ stages:
       vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
 
 - stage: prv_env_cleanup
+  dependsOn:
+  - prv_env_prepare
+  - prv_build
+  - prv_deploy
   condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'master'))
-  dependsOn: prv_deploy
   variables:
   - group: azure-prod-vm1
   - group: azure-prod-vm2
