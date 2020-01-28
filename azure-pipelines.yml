@@ -49,7 +49,6 @@ stages:
         template_path: 'template.json'
         ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-
   - job: build_vm2
     timeoutInMinutes: 30
     pool:
@@ -65,7 +64,6 @@ stages:
         template_path: 'template.json'
         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-
   - job: build_vm3
     timeoutInMinutes: 30
     pool:
@@ -82,17 +80,10 @@ stages:
         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-- stage: prod_deploy
-  condition: ne(variables['Build.Reason'], 'PullRequest')
-  variables:
-  - group: ansible-deploy-common
-  - group: azure-prod-vm1
-  - group: azure-prod-vm2
-  - group: azure-prod-vm3
-  jobs:
   - template: templates/deploy.yml
     parameters:
       environment: 'sbx'
+      variable_group: ansible-deploy-common
       vm1_name: '$(prodVm1Name)'
       vm2_name: '$(prodVm2Name)'
       vm3_name: '$(prodVm3Name)'
@@ -108,6 +99,8 @@ stages:
       vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
       vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
       vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
+
+
 
 - stage: prv
   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
@@ -203,8 +196,30 @@ stages:
         ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
+
+  - template: templates/deploy.yml
+    parameters:
+      environment: 'sbx-prv'
+      variable_group: ansible-deploy-common
+      vm1_name: '$(prodVm1Name)-prv'
+      vm2_name: '$(prodVm2Name)-prv'
+      vm3_name: '$(prodVm3Name)-prv'
+      vm1_rg_name: '$(prodVm1ResourceGroupName)-prv'
+      vm2_rg_name: '$(prodVm2ResourceGroupName)-prv'
+      vm3_rg_name: '$(prodVm3ResourceGroupName)-prv'
+      vm1_kv_name: '$(prodVm1KvName)-prv'
+      vm2_kv_name: '$(prodVm2KvName)-prv'
+      vm3_kv_name: '$(prodVm3KvName)-prv'
+      vm1_size: '$(prodVm1Size)'
+      vm2_size: '$(prodVm2Size)'
+      vm3_size: '$(prodVm3Size)'
+      vm1_ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
+      vm2_ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
+      vm3_ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
+
+
   - job: cleanup_vm1
-    dependsOn: build_vm3
+    dependsOn: deploy_vm3
     condition: succeeded()
     timeoutInMinutes: 30
     pool:
