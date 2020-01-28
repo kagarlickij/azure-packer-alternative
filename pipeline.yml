@@ -1,0 +1,77 @@
+resources:
+- repo: self
+  clean: true
+
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - template.json
+    - ansible/*
+
+pr:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - template.json
+    - ansible/*
+    - azure-pipelines.yml
+
+variables:
+- group: azure-connection
+- group: azure-tags
+- group: azure-packer-resources
+- group: azure-prod-network
+- group: ansible-windows-creds
+
+stages:
+- stage: prv_env_prepare
+  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+  jobs:
+  - job: prv_env_prepare_1
+    steps:
+    - bash: |
+        sleep 30
+      name: 'bash'
+  - job: prv_env_prepare_2
+    steps:
+    - bash: |
+        sleep 30
+      name: 'bash'
+
+- stage: prv_build
+  dependsOn: prv_env_prepare
+  condition: succeeded()
+  jobs:
+  - job: prv_build_1
+    steps:
+    - bash: |
+        sleep 30
+      name: 'bash'
+  - job: prv_build_2
+    steps:
+    - bash: |
+        sleep 30
+        exit 1
+      name: 'bash'
+
+- stage: prv_deploy
+  dependsOn:
+  - prv_env_prepare
+  - prv_build
+  condition: succeeded()
+  jobs:
+  - job: prv_deploy_1
+    steps:
+    - bash: |
+        sleep 30
+      name: 'bash'
+  - job: prv_deploy_2
+    steps:
+    - bash: |
+        sleep 30
+      name: 'bash'
