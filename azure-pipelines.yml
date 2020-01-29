@@ -146,66 +146,67 @@ stages:
       parameters:
         rg_name: '$(prodVm3ResourceGroupName)-prv'
 
-  - job: build_vm1
-    dependsOn: create_vm3_rg
-    condition: succeeded()
-    timeoutInMinutes: 30
-    pool:
-      name: 'Self-Hosted'
-    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-    variables:
-    - group: azure-prod-vm1
-    - group: ansible-build-vm1
-    - group: ansible-build-common
-    steps:
-    - template: templates/build.yml
-      parameters:
-        vm_name: '$(prodVm1Name)-prv'
-        template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-  - job: build_vm2
-    dependsOn: build_vm1
-    condition: succeeded()
-    timeoutInMinutes: 30
-    pool:
-      name: 'Self-Hosted'
-    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-    variables:
-    - group: azure-prod-vm2
-    - group: ansible-build-vm2
-    - group: ansible-build-common
-    steps:
-    - template: templates/build.yml
-      parameters:
-        vm_name: '$(prodVm2Name)-prv'
-        template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-  - job: build_vm3
-    dependsOn: build_vm2
-    condition: succeeded()
-    timeoutInMinutes: 30
-    pool:
-      name: 'Self-Hosted'
-    container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
-    variables:
-    - group: azure-prod-vm3
-    - group: ansible-build-vm3
-    - group: ansible-build-common
-    steps:
-    - template: templates/build.yml
-      parameters:
-        vm_name: '$(prodVm3Name)-prv'
-        template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+  # - job: build_vm1
+  #   dependsOn: create_vm3_rg
+  #   condition: succeeded()
+  #   timeoutInMinutes: 30
+  #   pool:
+  #     name: 'Self-Hosted'
+  #   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+  #   variables:
+  #   - group: azure-prod-vm1
+  #   - group: ansible-build-vm1
+  #   - group: ansible-build-common
+  #   steps:
+  #   - template: templates/build.yml
+  #     parameters:
+  #       vm_name: '$(prodVm1Name)-prv'
+  #       template_path: 'template.json'
+  #       ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
+  #       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+  # - job: build_vm2
+  #   dependsOn: build_vm1
+  #   condition: succeeded()
+  #   timeoutInMinutes: 30
+  #   pool:
+  #     name: 'Self-Hosted'
+  #   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+  #   variables:
+  #   - group: azure-prod-vm2
+  #   - group: ansible-build-vm2
+  #   - group: ansible-build-common
+  #   steps:
+  #   - template: templates/build.yml
+  #     parameters:
+  #       vm_name: '$(prodVm2Name)-prv'
+  #       template_path: 'template.json'
+  #       ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
+  #       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+  # - job: build_vm3
+  #   dependsOn: build_vm2
+  #   condition: succeeded()
+  #   timeoutInMinutes: 30
+  #   pool:
+  #     name: 'Self-Hosted'
+  #   container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
+  #   variables:
+  #   - group: azure-prod-vm3
+  #   - group: ansible-build-vm3
+  #   - group: ansible-build-common
+  #   steps:
+  #   - template: templates/build.yml
+  #     parameters:
+  #       vm_name: '$(prodVm3Name)-prv'
+  #       template_path: 'template.json'
+  #       ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
+  #       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
 
   - deployment: deploy_vm1
     timeoutInMinutes: 30
     dependsOn:
-    - build_vm3
+    - create_vm3_rg #TODO: replace this tmp dependency with build_vm3
+    # - build_vm3
     condition: succeeded()
     pool:
       name: 'Self-Hosted'
