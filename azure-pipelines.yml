@@ -204,6 +204,9 @@ stages:
 
   - deployment: deploy_vm1
     timeoutInMinutes: 30
+    dependsOn:
+    - build_vm3
+    condition: succeeded()
     pool:
       name: 'Self-Hosted'
     container: kagarlickij/packer-ansible-azure-docker-runtime:2.0.0
