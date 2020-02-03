@@ -1,0 +1,29 @@
+parameters:
+  vm_image_name: ''
+  rg_name: ''
+
+steps:
+- checkout: self
+  clean: true
+  persistCredentials: false
+  submodules: false
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az group delete --name ${{ parameters.rg_name }} --yes
+    failOnStandardError: true
+  name: 'delete_rg'
+  displayName: 'Delete Resource group'
+
+- task: AzureCLI@1
+  condition: succeeded()
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az image delete --ids '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/${{ parameters.vm_image_name }}'
+    failOnStandardError: true
+  name: 'delete_image'
+  displayName: 'Delete Image'
