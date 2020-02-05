@@ -10,6 +10,18 @@ steps:
   clean: true
   persistCredentials: false
   submodules: false
+
+- task: AzureCLI@1
+  condition: succeeded()
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az group create --name '${{ parameters.vm_rg_name }}' --location '$(prodVmRegion)'
+    failOnStandardError: true
+  name: 'create_rg'
+  displayName: 'Create Resource group'
+
 - task: AzureCLI@1
   inputs:
     azureSubscription: $(azureSubscription)
@@ -22,7 +34,6 @@ steps:
       --location '$(prodVmRegion)' \
       --size '${{ parameters.vm_size }}' \
       --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(packerVnetName)/subnets/$(packerVnetSubnetName)' \
-      --public-ip-address '' \
       --admin-username '$(ansibleUser)' \
       --admin-password '$(ansibleUserPass)' \
       --tags 'project=$(project)' 'environment=$(environment)'
@@ -71,3 +82,45 @@ steps:
     --extra-vars='${{ parameters.ansible_extra_vars }}'
   name: 'execute_ansible'
   displayName: 'Execute Ansible provisioner'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts '& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit'
+    failOnStandardError: true
+  name: 'run_sysprep'
+  displayName: 'Run SysPrep'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts '& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit'
+      az vm deallocate --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }}
+      az vm generalize --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }}
+    failOnStandardError: true
+  name: 'capture_preparation'
+  displayName: 'Prepare for Caption'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az image create --resource-group $(packerImagesResourceGroupName) --name ${{ parameters.vm_name }} --source '/subscriptions/$(azureSubscriptionId)/resourceGroups/${{ parameters.vm_rg_name }}/providers/Microsoft.Compute/virtualMachines/${{ parameters.vm_name }}'
+    failOnStandardError: true
+  name: 'capture_image'
+  displayName: 'Capture image'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az group delete --name ${{ parameters.vm_rg_name }} --yes
+    failOnStandardError: true
+  name: 'delete_rg'
+  displayName: 'Delete Resource group'
