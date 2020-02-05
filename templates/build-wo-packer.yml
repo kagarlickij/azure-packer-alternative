@@ -89,16 +89,6 @@ steps:
     scriptLocation: inlineScript
     inlineScript: |
       az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts '& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit'
-    failOnStandardError: true
-  name: 'run_sysprep'
-  displayName: 'Run SysPrep'
-
-- task: AzureCLI@1
-  inputs:
-    azureSubscription: $(azureSubscription)
-    scriptLocation: inlineScript
-    inlineScript: |
-      az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts '& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit'
       az vm deallocate --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }}
       az vm generalize --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }}
     failOnStandardError: true
