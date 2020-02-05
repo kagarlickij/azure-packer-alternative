@@ -48,325 +48,337 @@ stages:
     variables:
     - group: ansible-build-vm1
     steps:
-    - template: templates/build.yml
+    - template: templates/build-wo-packer.yml
       parameters:
-        vm_name: '$(prodVm1Name)'
-        template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-
-  - job: build_vm2
-    timeoutInMinutes: 30
-    dependsOn:
-    - build_vm1
-    condition: succeeded()
-    variables:
-    - group: ansible-build-vm2
-    steps:
-    - template: templates/build.yml
-      parameters:
-        vm_name: '$(prodVm2Name)'
-        template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-
-  - job: build_vm3
-    timeoutInMinutes: 30
-    dependsOn:
-    - build_vm2
-    condition: succeeded()
-    variables:
-    - group: ansible-build-vm3
-    steps:
-    - template: templates/build.yml
-      parameters:
-        vm_name: '$(prodVm3Name)'
-        template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+        vm_name: '$(prodVm1Name)-image'
+        vm_rg_name: '$(packerBuildResourceGroupName)'
+        vm_size: '$(prodVm1Size)'
 
 
-- stage: prod_deploy
-  condition: ne(variables['Build.Reason'], 'PullRequest')
-  dependsOn:
-  - prod_build
-  variables:
-  - group: ansible-deploy-common
-  - group: azure-prod-vm1
-  - group: azure-prod-vm2
-  - group: azure-prod-vm3
-  jobs:
-  - deployment: deploy_vm1
-    timeoutInMinutes: 30
-    condition: succeeded()
-    variables:
-    - group: ansible-deploy-vm1
-    environment: prod
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - template: templates/deploy.yml
-            parameters:
-              vm_name: '$(project_name)$(prodVm1ServiceName)$(environment_name)$(location)$(prodVm1InstanceNumber)'
-              vm_image_name: '$(prodVm1Name)'
-              vm_rg_name: '$(prodVm1ResourceGroupName)'
-              vm_kv_name: '$(prodVm1KvName)'
-              vm_size: '$(prodVm1Size)'
-              ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
-              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-          - bash: |
-              echo "##vso[task.setvariable variable=VM1_IP;isOutput=true]$GET_VM_IP_VM_IP"
-            name: 'export_ip'
-            displayName: 'Export VM1 IP address'
+  # - job: build_vm1
+  #   timeoutInMinutes: 30
+  #   variables:
+  #   - group: ansible-build-vm1
+  #   steps:
+  #   - template: templates/build.yml
+  #     parameters:
+  #       vm_name: '$(prodVm1Name)'
+  #       template_path: 'template.json'
+  #       ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
+  #       ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - deployment: deploy_vm2
-    timeoutInMinutes: 30
-    dependsOn:
-    - deploy_vm1
-    condition: succeeded()
-    variables:
-    - group: ansible-deploy-vm2
-    - name: VM1_IP
-      value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
-    environment: prod
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - template: templates/deploy.yml
-            parameters:
-              vm_name: '$(project_name)$(prodVm2ServiceName)$(environment_name)$(location)$(prodVm2InstanceNumber)'
-              vm_image_name: '$(prodVm2Name)'
-              vm_rg_name: '$(prodVm2ResourceGroupName)'
-              vm_kv_name: '$(prodVm2KvName)'
-              vm_size: '$(prodVm2Size)'
-              ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
-              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP)'
-          - bash: |
-              echo "##vso[task.setvariable variable=VM2_IP;isOutput=true]$GET_VM_IP_VM_IP"
-            name: 'export_ip'
-            displayName: 'Export VM2 IP address'
+#   - job: build_vm2
+#     timeoutInMinutes: 30
+#     dependsOn:
+#     - build_vm1
+#     condition: succeeded()
+#     variables:
+#     - group: ansible-build-vm2
+#     steps:
+#     - template: templates/build.yml
+#       parameters:
+#         vm_name: '$(prodVm2Name)'
+#         template_path: 'template.json'
+#         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
+#         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - deployment: deploy_vm3
-    timeoutInMinutes: 30
-    dependsOn:
-    - deploy_vm1
-    - deploy_vm2
-    condition: succeeded()
-    variables:
-    - group: ansible-deploy-vm3
-    - name: VM1_IP
-      value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
-    - name: VM2_IP
-      value: $[ dependencies.deploy_vm2.outputs['deploy_vm2.export_ip.VM2_IP'] ]
-    environment: prod
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - template: templates/deploy.yml
-            parameters:
-              vm_name: '$(project_name)$(prodVm3ServiceName)$(environment_name)$(location)$(prodVm3InstanceNumber)'
-              vm_image_name: '$(prodVm3Name)'
-              vm_rg_name: '$(prodVm3ResourceGroupName)'
-              vm_kv_name: '$(prodVm3KvName)'
-              vm_size: '$(prodVm3Size)'
-              ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
-              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP) var6=$(VM2_IP)'
+#   - job: build_vm3
+#     timeoutInMinutes: 30
+#     dependsOn:
+#     - build_vm2
+#     condition: succeeded()
+#     variables:
+#     - group: ansible-build-vm3
+#     steps:
+#     - template: templates/build.yml
+#       parameters:
+#         vm_name: '$(prodVm3Name)'
+#         template_path: 'template.json'
+#         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
+#         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
 
-- stage: prv
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
-  variables:
-  - group: azure-prod-vm1
-  - group: azure-prod-vm2
-  - group: azure-prod-vm3
-  jobs:
-  - job: create_vm1_rg
-    timeoutInMinutes: 10
-    steps:
-    - template: templates/prepare.yml
-      parameters:
-        rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+# - stage: prod_deploy
+#   condition: ne(variables['Build.Reason'], 'PullRequest')
+#   dependsOn:
+#   - prod_build
+#   variables:
+#   - group: ansible-deploy-common
+#   - group: azure-prod-vm1
+#   - group: azure-prod-vm2
+#   - group: azure-prod-vm3
+#   jobs:
+#   - deployment: deploy_vm1
+#     timeoutInMinutes: 30
+#     condition: succeeded()
+#     variables:
+#     - group: ansible-deploy-vm1
+#     environment: prod
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - template: templates/deploy.yml
+#             parameters:
+#               vm_name: '$(project_name)$(prodVm1ServiceName)$(environment_name)$(location)$(prodVm1InstanceNumber)'
+#               vm_image_name: '$(prodVm1Name)'
+#               vm_rg_name: '$(prodVm1ResourceGroupName)'
+#               vm_kv_name: '$(prodVm1KvName)'
+#               vm_size: '$(prodVm1Size)'
+#               ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
+#               ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+#           - bash: |
+#               echo "##vso[task.setvariable variable=VM1_IP;isOutput=true]$GET_VM_IP_VM_IP"
+#             name: 'export_ip'
+#             displayName: 'Export VM1 IP address'
 
-  - job: create_vm2_rg
-    timeoutInMinutes: 10
-    steps:
-    - template: templates/prepare.yml
-      parameters:
-        rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+#   - deployment: deploy_vm2
+#     timeoutInMinutes: 30
+#     dependsOn:
+#     - deploy_vm1
+#     condition: succeeded()
+#     variables:
+#     - group: ansible-deploy-vm2
+#     - name: VM1_IP
+#       value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+#     environment: prod
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - template: templates/deploy.yml
+#             parameters:
+#               vm_name: '$(project_name)$(prodVm2ServiceName)$(environment_name)$(location)$(prodVm2InstanceNumber)'
+#               vm_image_name: '$(prodVm2Name)'
+#               vm_rg_name: '$(prodVm2ResourceGroupName)'
+#               vm_kv_name: '$(prodVm2KvName)'
+#               vm_size: '$(prodVm2Size)'
+#               ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
+#               ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP)'
+#           - bash: |
+#               echo "##vso[task.setvariable variable=VM2_IP;isOutput=true]$GET_VM_IP_VM_IP"
+#             name: 'export_ip'
+#             displayName: 'Export VM2 IP address'
 
-  - job: create_vm3_rg
-    timeoutInMinutes: 10
-    steps:
-    - template: templates/prepare.yml
-      parameters:
-        rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+#   - deployment: deploy_vm3
+#     timeoutInMinutes: 30
+#     dependsOn:
+#     - deploy_vm1
+#     - deploy_vm2
+#     condition: succeeded()
+#     variables:
+#     - group: ansible-deploy-vm3
+#     - name: VM1_IP
+#       value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+#     - name: VM2_IP
+#       value: $[ dependencies.deploy_vm2.outputs['deploy_vm2.export_ip.VM2_IP'] ]
+#     environment: prod
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - template: templates/deploy.yml
+#             parameters:
+#               vm_name: '$(project_name)$(prodVm3ServiceName)$(environment_name)$(location)$(prodVm3InstanceNumber)'
+#               vm_image_name: '$(prodVm3Name)'
+#               vm_rg_name: '$(prodVm3ResourceGroupName)'
+#               vm_kv_name: '$(prodVm3KvName)'
+#               vm_size: '$(prodVm3Size)'
+#               ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
+#               ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP) var6=$(VM2_IP)'
 
-  - job: build_vm1
-    timeoutInMinutes: 30
-    variables:
-    - group: ansible-build-common
-    - group: ansible-build-vm1
-    steps:
-    - template: templates/build.yml
-      parameters:
-        vm_name: '$(prodVm1Name)-prv$(System.PullRequest.PullRequestNumber)'
-        template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - job: build_vm2
-    dependsOn:
-    - build_vm1
-    condition: succeeded()
-    timeoutInMinutes: 30
-    variables:
-    - group: ansible-build-common
-    - group: ansible-build-vm2
-    steps:
-    - template: templates/build.yml
-      parameters:
-        vm_name: '$(prodVm2Name)-prv$(System.PullRequest.PullRequestNumber)'
-        template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+# - stage: prv
+#   condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+#   variables:
+#   - group: azure-prod-vm1
+#   - group: azure-prod-vm2
+#   - group: azure-prod-vm3
+#   jobs:
+#   - job: create_vm1_rg
+#     timeoutInMinutes: 10
+#     steps:
+#     - template: templates/prepare.yml
+#       parameters:
+#         rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
 
-  - job: build_vm3
-    dependsOn:
-    - build_vm2
-    condition: succeeded()
-    timeoutInMinutes: 30
-    variables:
-    - group: ansible-build-common
-    - group: ansible-build-vm3
-    steps:
-    - template: templates/build.yml
-      parameters:
-        vm_name: '$(prodVm3Name)-prv$(System.PullRequest.PullRequestNumber)'
-        template_path: 'template.json'
-        ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+#   - job: create_vm2_rg
+#     timeoutInMinutes: 10
+#     steps:
+#     - template: templates/prepare.yml
+#       parameters:
+#         rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
 
-  - deployment: deploy_vm1
-    timeoutInMinutes: 30
-    dependsOn:
-    - build_vm1
-    condition: succeeded()
-    variables:
-    - group: ansible-deploy-vm1
-    - group: ansible-deploy-common
-    environment: sbx
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - template: templates/deploy.yml
-            parameters:
-              vm_name: '$(project_name)$(prodVm1ServiceName)$(environment_name)$(location)$(prodVm1InstanceNumber)'
-              vm_image_name: '$(prodVm1Name)-prv$(System.PullRequest.PullRequestNumber)'
-              vm_rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
-              vm_kv_name: '$(prodVm1KvName)-prv$(System.PullRequest.PullRequestNumber)'
-              vm_size: '$(prodVm1Size)'
-              ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
-              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
-          - bash: |
-              echo "##vso[task.setvariable variable=VM1_IP;isOutput=true]$GET_VM_IP_VM_IP"
-            name: 'export_ip'
-            displayName: 'Export VM1 IP address'
+#   - job: create_vm3_rg
+#     timeoutInMinutes: 10
+#     steps:
+#     - template: templates/prepare.yml
+#       parameters:
+#         rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
 
-  - deployment: deploy_vm2
-    timeoutInMinutes: 30
-    dependsOn:
-    - build_vm2
-    - deploy_vm1
-    condition: succeeded()
-    variables:
-    - group: ansible-deploy-common
-    - group: ansible-deploy-vm2
-    - name: VM1_IP
-      value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
-    environment: sbx
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - template: templates/deploy.yml
-            parameters:
-              vm_name: '$(project_name)$(prodVm2ServiceName)$(environment_name)$(location)$(prodVm2InstanceNumber)'
-              vm_image_name: '$(prodVm2Name)-prv$(System.PullRequest.PullRequestNumber)'
-              vm_rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
-              vm_kv_name: '$(prodVm2KvName)-prv$(System.PullRequest.PullRequestNumber)'
-              vm_size: '$(prodVm2Size)'
-              ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
-              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP)'
-          - bash: |
-              echo "##vso[task.setvariable variable=VM2_IP;isOutput=true]$GET_VM_IP_VM_IP"
-            name: 'export_ip'
-            displayName: 'Export VM2 IP address'
+#   - job: build_vm1
+#     timeoutInMinutes: 30
+#     variables:
+#     - group: ansible-build-common
+#     - group: ansible-build-vm1
+#     steps:
+#     - template: templates/build.yml
+#       parameters:
+#         vm_name: '$(prodVm1Name)-prv$(System.PullRequest.PullRequestNumber)'
+#         template_path: 'template.json'
+#         ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
+#         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - deployment: deploy_vm3
-    timeoutInMinutes: 30
-    dependsOn:
-    - build_vm3
-    - deploy_vm1
-    - deploy_vm2
-    condition: succeeded()
-    variables:
-    - group: ansible-deploy-vm3
-    - group: ansible-deploy-common
-    - name: VM1_IP
-      value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
-    - name: VM2_IP
-      value: $[ dependencies.deploy_vm2.outputs['deploy_vm2.export_ip.VM2_IP'] ]
-    environment: sbx
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - template: templates/deploy.yml
-            parameters:
-              vm_name: '$(project_name)$(prodVm3ServiceName)$(environment_name)$(location)$(prodVm3InstanceNumber)'
-              vm_image_name: '$(prodVm3Name)-prv$(System.PullRequest.PullRequestNumber)'
-              vm_rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
-              vm_kv_name: '$(prodVm3KvName)-prv$(System.PullRequest.PullRequestNumber)'
-              vm_size: '$(prodVm3Size)'
-              ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
-              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP) var6=$(VM2_IP)'
+#   - job: build_vm2
+#     dependsOn:
+#     - build_vm1
+#     condition: succeeded()
+#     timeoutInMinutes: 30
+#     variables:
+#     - group: ansible-build-common
+#     - group: ansible-build-vm2
+#     steps:
+#     - template: templates/build.yml
+#       parameters:
+#         vm_name: '$(prodVm2Name)-prv$(System.PullRequest.PullRequestNumber)'
+#         template_path: 'template.json'
+#         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
+#         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - job: cleanup_vm1
-    dependsOn: deploy_vm3
-    condition: succeeded()
-    timeoutInMinutes: 30
-    variables:
-    - group: azure-prod-vm1
-    steps:
-    - template: templates/cleanup.yml
-      parameters:
-        vm_image_name: $(prodVm1Name)-prv$(System.PullRequest.PullRequestNumber)
-        rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+#   - job: build_vm3
+#     dependsOn:
+#     - build_vm2
+#     condition: succeeded()
+#     timeoutInMinutes: 30
+#     variables:
+#     - group: ansible-build-common
+#     - group: ansible-build-vm3
+#     steps:
+#     - template: templates/build.yml
+#       parameters:
+#         vm_name: '$(prodVm3Name)-prv$(System.PullRequest.PullRequestNumber)'
+#         template_path: 'template.json'
+#         ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
+#         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
-  - job: cleanup_vm2
-    dependsOn: deploy_vm3
-    condition: succeeded()
-    timeoutInMinutes: 30
-    variables:
-    - group: azure-prod-vm1
-    steps:
-    - template: templates/cleanup.yml
-      parameters:
-        vm_image_name: $(prodVm2Name)-prv$(System.PullRequest.PullRequestNumber)
-        rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+#   - deployment: deploy_vm1
+#     timeoutInMinutes: 30
+#     dependsOn:
+#     - build_vm1
+#     condition: succeeded()
+#     variables:
+#     - group: ansible-deploy-vm1
+#     - group: ansible-deploy-common
+#     environment: sbx
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - template: templates/deploy.yml
+#             parameters:
+#               vm_name: '$(project_name)$(prodVm1ServiceName)$(environment_name)$(location)$(prodVm1InstanceNumber)'
+#               vm_image_name: '$(prodVm1Name)-prv$(System.PullRequest.PullRequestNumber)'
+#               vm_rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+#               vm_kv_name: '$(prodVm1KvName)-prv$(System.PullRequest.PullRequestNumber)'
+#               vm_size: '$(prodVm1Size)'
+#               ansible_playbook_path: 'ansible/$(prodVm1Name)/release-playbook.yml'
+#               ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+#           - bash: |
+#               echo "##vso[task.setvariable variable=VM1_IP;isOutput=true]$GET_VM_IP_VM_IP"
+#             name: 'export_ip'
+#             displayName: 'Export VM1 IP address'
 
-  - job: cleanup_vm3
-    dependsOn: deploy_vm3
-    condition: succeeded()
-    timeoutInMinutes: 30
-    variables:
-    - group: azure-prod-vm1
-    steps:
-    - template: templates/cleanup.yml
-      parameters:
-        vm_image_name: $(prodVm3Name)-prv$(System.PullRequest.PullRequestNumber)
-        rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+#   - deployment: deploy_vm2
+#     timeoutInMinutes: 30
+#     dependsOn:
+#     - build_vm2
+#     - deploy_vm1
+#     condition: succeeded()
+#     variables:
+#     - group: ansible-deploy-common
+#     - group: ansible-deploy-vm2
+#     - name: VM1_IP
+#       value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+#     environment: sbx
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - template: templates/deploy.yml
+#             parameters:
+#               vm_name: '$(project_name)$(prodVm2ServiceName)$(environment_name)$(location)$(prodVm2InstanceNumber)'
+#               vm_image_name: '$(prodVm2Name)-prv$(System.PullRequest.PullRequestNumber)'
+#               vm_rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+#               vm_kv_name: '$(prodVm2KvName)-prv$(System.PullRequest.PullRequestNumber)'
+#               vm_size: '$(prodVm2Size)'
+#               ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
+#               ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP)'
+#           - bash: |
+#               echo "##vso[task.setvariable variable=VM2_IP;isOutput=true]$GET_VM_IP_VM_IP"
+#             name: 'export_ip'
+#             displayName: 'Export VM2 IP address'
+
+#   - deployment: deploy_vm3
+#     timeoutInMinutes: 30
+#     dependsOn:
+#     - build_vm3
+#     - deploy_vm1
+#     - deploy_vm2
+#     condition: succeeded()
+#     variables:
+#     - group: ansible-deploy-vm3
+#     - group: ansible-deploy-common
+#     - name: VM1_IP
+#       value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+#     - name: VM2_IP
+#       value: $[ dependencies.deploy_vm2.outputs['deploy_vm2.export_ip.VM2_IP'] ]
+#     environment: sbx
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - template: templates/deploy.yml
+#             parameters:
+#               vm_name: '$(project_name)$(prodVm3ServiceName)$(environment_name)$(location)$(prodVm3InstanceNumber)'
+#               vm_image_name: '$(prodVm3Name)-prv$(System.PullRequest.PullRequestNumber)'
+#               vm_rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+#               vm_kv_name: '$(prodVm3KvName)-prv$(System.PullRequest.PullRequestNumber)'
+#               vm_size: '$(prodVm3Size)'
+#               ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
+#               ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP) var6=$(VM2_IP)'
+
+#   - job: cleanup_vm1
+#     dependsOn: deploy_vm3
+#     condition: succeeded()
+#     timeoutInMinutes: 30
+#     variables:
+#     - group: azure-prod-vm1
+#     steps:
+#     - template: templates/cleanup.yml
+#       parameters:
+#         vm_image_name: $(prodVm1Name)-prv$(System.PullRequest.PullRequestNumber)
+#         rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+
+#   - job: cleanup_vm2
+#     dependsOn: deploy_vm3
+#     condition: succeeded()
+#     timeoutInMinutes: 30
+#     variables:
+#     - group: azure-prod-vm1
+#     steps:
+#     - template: templates/cleanup.yml
+#       parameters:
+#         vm_image_name: $(prodVm2Name)-prv$(System.PullRequest.PullRequestNumber)
+#         rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+
+#   - job: cleanup_vm3
+#     dependsOn: deploy_vm3
+#     condition: succeeded()
+#     timeoutInMinutes: 30
+#     variables:
+#     - group: azure-prod-vm1
+#     steps:
+#     - template: templates/cleanup.yml
+#       parameters:
+#         vm_image_name: $(prodVm3Name)-prv$(System.PullRequest.PullRequestNumber)
+#         rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'

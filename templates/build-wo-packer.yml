@@ -1,0 +1,39 @@
+parameters:
+  vm_name: ''
+  vm_rg_name: ''
+  vm_size: ''
+
+steps:
+- checkout: self
+  clean: true
+  persistCredentials: false
+  submodules: false
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az vm create \
+      --resource-group '${{ parameters.vm_rg_name }}' \
+      --name '${{ parameters.vm_name }}' \
+      --image 'Win2016Datacenter' \
+      --location '$(prodVmRegion)' \
+      --size '${{ parameters.vm_size }}' \
+      --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(packerVnetName)/subnets/$(packerVnetSubnetName)' \
+      --public-ip-address '' \
+      --admin-username '$(ansibleUser)' \
+      --admin-password '$(ansibleUserPass)' \
+      --tags 'project=$(project)' 'environment=$(environment)'
+    failOnStandardError: true
+  name: 'create_vm'
+  displayName: 'Create VM'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
+    failOnStandardError: true
+  name: 'setup_winrm'
+  displayName: 'Setup WinRM'
