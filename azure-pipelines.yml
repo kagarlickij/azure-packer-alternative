@@ -53,6 +53,8 @@ stages:
         vm_name: '$(prodVm1Name)-image'
         vm_rg_name: '$(packerBuildResourceGroupName)'
         vm_size: '$(prodVm1Size)'
+        ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
 
   # - job: build_vm1

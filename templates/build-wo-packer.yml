@@ -2,6 +2,8 @@ parameters:
   vm_name: ''
   vm_rg_name: ''
   vm_size: ''
+  ansible_playbook_path: ''
+  ansible_extra_vars: ''
 
 steps:
 - checkout: self
@@ -33,7 +35,39 @@ steps:
     azureSubscription: $(azureSubscription)
     scriptLocation: inlineScript
     inlineScript: |
+      VM_IP=$(az vm list-ip-addresses --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+      echo "##vso[task.setvariable variable=VM_IP;isOutput=true]$VM_IP"
+    failOnStandardError: true
+  name: 'get_vm_ip'
+  displayName: 'Get VM IP'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
       az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
     failOnStandardError: true
   name: 'setup_winrm'
   displayName: 'Setup WinRM'
+
+- bash: |
+    if [ -z "$GET_VM_IP_VM_IP" ]; then {
+      echo "ERROR: GET_VM_IP_VM_IP variable is empty, breaking.."
+      exit 1
+    } else {
+      echo "Creating hosts file.."
+      echo -e "[all]\n$GET_VM_IP_VM_IP" > hosts
+    }
+    fi
+  name: 'create_ansible_hosts'
+  displayName: 'Create Ansible hosts file'
+
+- bash: >
+    ansible-playbook
+    -vvvv
+    -i hosts
+    ${{ parameters.ansible_playbook_path }}
+    --extra-vars='${{ parameters.ansible_extra_vars }}'
+  name: 'execute_ansible'
+  displayName: 'Execute Ansible provisioner'
