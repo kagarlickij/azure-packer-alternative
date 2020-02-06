@@ -17,9 +17,17 @@ steps:
     azureSubscription: $(azureSubscription)
     scriptLocation: inlineScript
     inlineScript: |
-      az group create --name '${{ parameters.vm_rg_name }}' --location '$(prodVmRegion)'
+      az group exists --name '${{ parameters.vm_rg_name }}' > /dev/null 2>&1
+      if [ $? -eq 0 ]; then {
+        echo "ERROR: Resource group already exists, breaking.."
+        exit 1
+      } else {
+        echo "Creating Resource group.."
+        az group create --name '${{ parameters.vm_rg_name }}' --location '$(prodVmRegion)'
+      }
+      fi
     failOnStandardError: true
-  name: 'create_rg' #TODO: Fail if group already exist
+  name: 'create_rg'
   displayName: 'Create Resource group'
 
 - task: AzureCLI@1
