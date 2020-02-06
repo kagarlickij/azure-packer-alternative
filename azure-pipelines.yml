@@ -44,7 +44,7 @@ stages:
   - group: azure-prod-vm3
   jobs:
   - job: build_vm1
-    timeoutInMinutes: 30
+    timeoutInMinutes: 45
     variables:
     - group: ansible-build-vm1
     steps:

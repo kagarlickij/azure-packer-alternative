@@ -19,7 +19,7 @@ steps:
     inlineScript: |
       az group create --name '${{ parameters.vm_rg_name }}' --location '$(prodVmRegion)'
     failOnStandardError: true
-  name: 'create_rg'
+  name: 'create_rg' #TODO: Fail if group already exist
   displayName: 'Create Resource group'
 
 - task: AzureCLI@1
@@ -51,6 +51,11 @@ steps:
     failOnStandardError: true
   name: 'get_vm_ip'
   displayName: 'Get VM IP'
+
+- bash: |
+    sleep 15m
+  name: 'debug_sleep'
+  displayName: 'DEBUG: Sleep 15m'
 
 - task: AzureCLI@1
   inputs:
@@ -102,7 +107,7 @@ steps:
     inlineScript: |
       az image create --resource-group $(packerImagesResourceGroupName) --name ${{ parameters.vm_name }} --source '/subscriptions/$(azureSubscriptionId)/resourceGroups/${{ parameters.vm_rg_name }}/providers/Microsoft.Compute/virtualMachines/${{ parameters.vm_name }}'
     failOnStandardError: true
-  name: 'capture_image'
+  name: 'capture_image' #TODO: Check if image exist
   displayName: 'Capture image'
 
 - task: AzureCLI@1
