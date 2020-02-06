@@ -52,11 +52,6 @@ steps:
   name: 'get_vm_ip'
   displayName: 'Get VM IP'
 
-- bash: |
-    sleep 15m
-  name: 'debug_sleep'
-  displayName: 'DEBUG: Sleep 15m'
-
 - task: AzureCLI@1
   inputs:
     azureSubscription: $(azureSubscription)
