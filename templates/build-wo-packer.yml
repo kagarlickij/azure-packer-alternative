@@ -17,8 +17,7 @@ steps:
     azureSubscription: $(azureSubscription)
     scriptLocation: inlineScript
     inlineScript: |
-      az group exists --name '${{ parameters.vm_rg_name }}' > /dev/null 2>&1
-      if [ $? -eq 0 ]; then {
+      if [[ $(az group exists --name '${{ parameters.vm_rg_name }}') == *'true'* ]]; then {
         echo "ERROR: Resource group already exists, breaking.."
         exit 1
       } else {
