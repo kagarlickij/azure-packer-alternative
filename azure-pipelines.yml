@@ -48,7 +48,7 @@ stages:
     variables:
     - group: ansible-build-vm1
     steps:
-    - template: templates/build-wo-packer.yml
+    - template: templates/build.yml
       parameters:
         vm_image_name: '$(prodVm1Name)-image'
         vm_image_rg_name: '$(prodVm1Name)-image-rg'
@@ -60,7 +60,7 @@ stages:
     variables:
     - group: ansible-build-vm2
     steps:
-    - template: templates/build-wo-packer.yml
+    - template: templates/build.yml
       parameters:
         vm_image_name: '$(prodVm2Name)-image'
         vm_image_rg_name: '$(prodVm2Name)-image-rg'
@@ -72,7 +72,7 @@ stages:
     variables:
     - group: ansible-build-vm3
     steps:
-    - template: templates/build-wo-packer.yml
+    - template: templates/build.yml
       parameters:
         vm_image_name: '$(prodVm3Name)-image'
         vm_image_rg_name: '$(prodVm3Name)-image-rg'
