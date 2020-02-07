@@ -1,6 +1,7 @@
 parameters:
   vm_name: ''
   vm_image_name: ''
+  vm_image_rg_name: ''
   vm_rg_name: ''
   vm_kv_name: ''
   vm_size: ''
@@ -26,7 +27,7 @@ steps:
         az vm create \
         --resource-group '${{ parameters.vm_rg_name }}' \
         --name '${{ parameters.vm_name }}' \
-        --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerImagesResourceGroupName)/providers/Microsoft.Compute/images/${{ parameters.vm_image_name }}' \
+        --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/${{ parameters.vm_image_rg_name }}/providers/Microsoft.Compute/images/${{ parameters.vm_image_name }}' \
         --location '$(prodVmRegion)' \
         --size '${{ parameters.vm_size }}' \
         --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(prodVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(prodVnetName)/subnets/$(prodVnetSubnetName)' \

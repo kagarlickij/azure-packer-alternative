@@ -107,6 +107,7 @@ stages:
             parameters:
               vm_name: '$(project_name)$(prodVm1ServiceName)$(environment_name)$(location)$(prodVm1InstanceNumber)'
               vm_image_name: '$(prodVm1Name)-image'
+              vm_image_rg_name: '$(packerImagesResourceGroupName)'
               vm_rg_name: '$(prodVm1ResourceGroupName)'
               vm_kv_name: '$(prodVm1KvName)'
               vm_size: '$(prodVm1Size)'
@@ -135,6 +136,7 @@ stages:
             parameters:
               vm_name: '$(project_name)$(prodVm2ServiceName)$(environment_name)$(location)$(prodVm2InstanceNumber)'
               vm_image_name: '$(prodVm2Name)-image'
+              vm_image_rg_name: '$(packerImagesResourceGroupName)'
               vm_rg_name: '$(prodVm2ResourceGroupName)'
               vm_kv_name: '$(prodVm2KvName)'
               vm_size: '$(prodVm2Size)'
@@ -166,6 +168,7 @@ stages:
             parameters:
               vm_name: '$(project_name)$(prodVm3ServiceName)$(environment_name)$(location)$(prodVm3InstanceNumber)'
               vm_image_name: '$(prodVm3Name)-image'
+              vm_image_rg_name: '$(packerImagesResourceGroupName)'
               vm_rg_name: '$(prodVm3ResourceGroupName)'
               vm_kv_name: '$(prodVm3KvName)'
               vm_size: '$(prodVm3Size)'
