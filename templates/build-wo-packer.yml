@@ -108,9 +108,17 @@ steps:
     azureSubscription: $(azureSubscription)
     scriptLocation: inlineScript
     inlineScript: |
+      if [[ $(az image list --resource-group 'packer-images-rg' | jq --raw-output '.[] | .name') == *${{ parameters.vm_name }}* ]]; then {
+        echo "Old image detected, deleting.."
+        az image delete --resource-group $(packerImagesResourceGroupName) --name ${{ parameters.vm_name }}
+      } else {
+        echo "Old image was not detected.."
+      }
+      fi
+      echo "Creating image.."
       az image create --resource-group $(packerImagesResourceGroupName) --name ${{ parameters.vm_name }} --source '/subscriptions/$(azureSubscriptionId)/resourceGroups/${{ parameters.vm_rg_name }}/providers/Microsoft.Compute/virtualMachines/${{ parameters.vm_name }}'
     failOnStandardError: true
-  name: 'capture_image' #TODO: Check if image exist
+  name: 'capture_image'
   displayName: 'Capture image'
 
 - task: AzureCLI@1
