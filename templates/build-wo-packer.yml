@@ -41,6 +41,7 @@ steps:
       --location '$(prodVmRegion)' \
       --size '${{ parameters.vm_size }}' \
       --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(packerVnetName)/subnets/$(packerVnetSubnetName)' \
+      --public-ip-address '' \
       --admin-username '$(ansibleUser)' \
       --admin-password '$(ansibleUserPass)' \
       --tags 'project=$(project)' 'environment=$(environment)'
