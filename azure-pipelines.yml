@@ -51,7 +51,8 @@ stages:
     - template: templates/build.yml
       parameters:
         vm_image_name: '$(prodVm1Name)-image'
-        vm_image_rg_name: '$(prodVm1Name)-image-rg'
+        vm_image_rg_name: '$(packerImagesResourceGroupName)'
+        vm_image_build_rg_name: '$(prodVm1Name)-image-rg'
         ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
@@ -63,7 +64,8 @@ stages:
     - template: templates/build.yml
       parameters:
         vm_image_name: '$(prodVm2Name)-image'
-        vm_image_rg_name: '$(prodVm2Name)-image-rg'
+        vm_image_rg_name: '$(packerImagesResourceGroupName)'
+        vm_image_build_rg_name: '$(prodVm2Name)-image-rg'
         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
@@ -75,7 +77,8 @@ stages:
     - template: templates/build.yml
       parameters:
         vm_image_name: '$(prodVm3Name)-image'
-        vm_image_rg_name: '$(prodVm3Name)-image-rg'
+        vm_image_rg_name: '$(packerImagesResourceGroupName)'
+        vm_image_build_rg_name: '$(prodVm3Name)-image-rg'
         ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
@@ -199,17 +202,20 @@ stages:
 #         rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
 
 #   - job: build_vm1
-#     timeoutInMinutes: 30
+#     timeoutInMinutes: 45
 #     variables:
 #     - group: ansible-build-common
 #     - group: ansible-build-vm1
 #     steps:
 #     - template: templates/build.yml
 #       parameters:
-#         vm_name: '$(prodVm1Name)-prv$(System.PullRequest.PullRequestNumber)'
-#         template_path: 'template.json'
+#         vm_image_name: '$(prodVm1Name)-image-prv$(System.PullRequest.PullRequestNumber)'
+#         vm_image_rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
+#         vm_image_build_rg_name: '$(prodVm1Name)-image-rg-prv$(System.PullRequest.PullRequestNumber)'
 #         ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
 #         ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+
+
 
 #   - job: build_vm2
 #     dependsOn:
