@@ -1,6 +1,6 @@
 parameters:
-  vm_name: ''
-  template_path: ''
+  vm_image_name: ''
+  vm_image_rg_name: ''
   ansible_playbook_path: ''
   ansible_extra_vars: ''
 
@@ -9,28 +9,123 @@ steps:
   clean: true
   persistCredentials: false
   submodules: false
-- task: riezebosch.Packer.Packer.Packer@1
-  displayName: 'Build image'
+
+- task: AzureCLI@1
+  condition: succeeded()
   inputs:
-    connectedServiceType: 'azure'
     azureSubscription: $(azureSubscription)
-    templatePath: ${{ parameters.template_path }}
-    command: 'build'
-    force: true
-    variables: |
-      project=$(project)
-      environment=$(environment)
-      azure_client_id=$(azureClientId)
-      azure_client_secret=$(azureClientSecret)
-      azure_tenant_id=$(azureTenantId)
-      azure_subscription_id=$(azureSubscriptionId)
-      packer_vnet_resource_group_name=$(packerVnetResourceGroupName)
-      packer_vnet_name=$(packerVnetName)
-      packer_vnet_subnet_name=$(packerVnetSubnetName)
-      packer_build_resource_group_name=$(packerBuildResourceGroupName)
-      packer_images_resource_group_name=$(packerImagesResourceGroupName)
-      packer_image_name=${{ parameters.vm_name }}
-      ansible_playbook_path=${{ parameters.ansible_playbook_path }}
-      ansible_user=$(ansibleUser)
-      ansible_user_password=$(ansibleUserPass)
-      ansible_extra_vars=${{ parameters.ansible_extra_vars }}
+    scriptLocation: inlineScript
+    inlineScript: |
+      if [[ $(az group exists --name '${{ parameters.vm_image_rg_name }}') == *'true'* ]]; then {
+        echo "ERROR: Resource group already exists, breaking.."
+        exit 1
+      } else {
+        echo "Creating Resource group.."
+        az group create --name '${{ parameters.vm_image_rg_name }}' --location '$(prodVmRegion)'
+      }
+      fi
+    failOnStandardError: true
+  name: 'create_rg'
+  displayName: 'Create Resource group'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az vm create \
+      --resource-group '${{ parameters.vm_image_rg_name }}' \
+      --name '${{ parameters.vm_image_name }}' \
+      --image 'Win2016Datacenter' \
+      --location '$(prodVmRegion)' \
+      --size '$(prodVm1Size)' \
+      --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/$(packerVnetResourceGroupName)/providers/Microsoft.Network/virtualNetworks/$(packerVnetName)/subnets/$(packerVnetSubnetName)' \
+      --public-ip-address '' \
+      --admin-username '$(ansibleUser)' \
+      --admin-password '$(ansibleUserPass)' \
+      --tags 'project=$(project)' 'environment=$(environment)'
+    failOnStandardError: true
+  name: 'create_vm'
+  displayName: 'Create VM'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      VM_IP=$(az vm list-ip-addresses --resource-group ${{ parameters.vm_image_rg_name }} --name ${{ parameters.vm_image_name }} --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+      echo "##vso[task.setvariable variable=VM_IP;isOutput=true]$VM_IP"
+    failOnStandardError: true
+  name: 'get_vm_ip'
+  displayName: 'Get VM IP'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_image_rg_name }} --name ${{ parameters.vm_image_name }} --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1; Remove-Item ./ConfigureRemotingForAnsible.ps1'
+    failOnStandardError: true
+  name: 'setup_winrm'
+  displayName: 'Setup WinRM'
+
+- bash: |
+    if [ -z "$GET_VM_IP_VM_IP" ]; then {
+      echo "ERROR: GET_VM_IP_VM_IP variable is empty, breaking.."
+      exit 1
+    } else {
+      echo "Creating hosts file.."
+      echo -e "[all]\n$GET_VM_IP_VM_IP" > hosts
+    }
+    fi
+  name: 'create_ansible_hosts'
+  displayName: 'Create Ansible hosts file'
+
+- bash: >
+    ansible-playbook
+    -vvvv
+    -i hosts
+    ${{ parameters.ansible_playbook_path }}
+    --extra-vars='${{ parameters.ansible_extra_vars }}'
+  name: 'execute_ansible'
+  displayName: 'Execute Ansible provisioner'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_image_rg_name }} --name ${{ parameters.vm_image_name }} --scripts '& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit'
+      az vm deallocate --resource-group ${{ parameters.vm_image_rg_name }} --name ${{ parameters.vm_image_name }}
+      az vm generalize --resource-group ${{ parameters.vm_image_rg_name }} --name ${{ parameters.vm_image_name }}
+    failOnStandardError: true
+  name: 'capture_preparation'
+  displayName: 'Prepare for Caption'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      if [[ $(az image list --resource-group 'packer-images-rg' | jq --raw-output '.[] | .name') == *${{ parameters.vm_image_name }}* ]]; then {
+        echo "Old image detected, deleting.."
+        az image delete --resource-group $(packerImagesResourceGroupName) --name ${{ parameters.vm_image_name }}
+      } else {
+        echo "Old image was not detected.."
+      }
+      fi
+      echo "Creating image.."
+      az image create --resource-group $(packerImagesResourceGroupName) --name ${{ parameters.vm_image_name }} --source '/subscriptions/$(azureSubscriptionId)/resourceGroups/${{ parameters.vm_image_rg_name }}/providers/Microsoft.Compute/virtualMachines/${{ parameters.vm_image_name }}'
+    failOnStandardError: true
+  name: 'capture_image'
+  displayName: 'Capture image'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az group delete --name ${{ parameters.vm_image_rg_name }} --yes
+    failOnStandardError: true
+  name: 'delete_rg'
+  displayName: 'Delete Resource group'
