@@ -212,7 +212,7 @@ stages:
     steps:
     - template: templates/build.yml
       parameters:
-        vm_image_name: '$(prodVm1Name)-image-prv$(System.PullRequest.PullRequestNumber)'
+        vm_image_name: '$(prodVm1Name)-image'
         vm_image_rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
         vm_image_build_rg_name: '$(prodVm1Name)-image-rg-prv$(System.PullRequest.PullRequestNumber)'
         ansible_playbook_path: ansible/$(prodVm1Name)/build-playbook.yml
@@ -226,7 +226,7 @@ stages:
     steps:
     - template: templates/build.yml
       parameters:
-        vm_image_name: '$(prodVm2Name)-image-prv$(System.PullRequest.PullRequestNumber)'
+        vm_image_name: '$(prodVm2Name)-image'
         vm_image_rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
         vm_image_build_rg_name: '$(prodVm2Name)-image-rg-prv$(System.PullRequest.PullRequestNumber)'
         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
@@ -240,7 +240,7 @@ stages:
     steps:
     - template: templates/build.yml
       parameters:
-        vm_image_name: '$(prodVm3Name)-image-prv$(System.PullRequest.PullRequestNumber)'
+        vm_image_name: '$(prodVm3Name)-image'
         vm_image_rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
         vm_image_build_rg_name: '$(prodVm3Name)-image-rg-prv$(System.PullRequest.PullRequestNumber)'
         ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
