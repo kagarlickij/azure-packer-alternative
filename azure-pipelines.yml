@@ -263,7 +263,7 @@ stages:
           - template: templates/deploy.yml
             parameters:
               vm_name: '$(project_name)$(prodVm1ServiceName)$(environment_name)$(location)$(prodVm1InstanceNumber)'
-              vm_image_name: '$(prodVm1Name)-image-prv$(System.PullRequest.PullRequestNumber)'
+              vm_image_name: '$(prodVm1Name)-image'
               vm_image_rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
               vm_rg_name: '$(prodVm1ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
               vm_kv_name: '$(prodVm1KvName)-prv$(System.PullRequest.PullRequestNumber)'
@@ -294,7 +294,7 @@ stages:
           - template: templates/deploy.yml
             parameters:
               vm_name: '$(project_name)$(prodVm2ServiceName)$(environment_name)$(location)$(prodVm2InstanceNumber)'
-              vm_image_name: '$(prodVm2Name)-image-prv$(System.PullRequest.PullRequestNumber)'
+              vm_image_name: '$(prodVm2Name)-image'
               vm_image_rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
               vm_rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
               vm_kv_name: '$(prodVm2KvName)-prv$(System.PullRequest.PullRequestNumber)'
@@ -328,7 +328,7 @@ stages:
           - template: templates/deploy.yml
             parameters:
               vm_name: '$(project_name)$(prodVm3ServiceName)$(environment_name)$(location)$(prodVm3InstanceNumber)'
-              vm_image_name: '$(prodVm3Name)-image-prv$(System.PullRequest.PullRequestNumber)'
+              vm_image_name: '$(prodVm3Name)-image'
               vm_image_rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
               vm_rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
               vm_kv_name: '$(prodVm3KvName)-prv$(System.PullRequest.PullRequestNumber)'
