@@ -230,7 +230,7 @@ stages:
         vm_image_rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
         vm_image_build_rg_name: '$(prodVm2Name)-image-rg-prv$(System.PullRequest.PullRequestNumber)'
         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP)'
 
   - job: build_vm3
     timeoutInMinutes: 45
@@ -244,7 +244,7 @@ stages:
         vm_image_rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
         vm_image_build_rg_name: '$(prodVm3Name)-image-rg-prv$(System.PullRequest.PullRequestNumber)'
         ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP) var6=$(VM2_IP)'
 
   - deployment: deploy_vm1
     timeoutInMinutes: 45
