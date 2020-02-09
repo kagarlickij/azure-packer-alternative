@@ -286,7 +286,7 @@ stages:
     - group: ansible-deploy-vm2
     - name: VM1_IP
       value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
-    environment: sbx
+    environment: prv
     strategy:
       runOnce:
         deploy:
@@ -320,7 +320,7 @@ stages:
       value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
     - name: VM2_IP
       value: $[ dependencies.deploy_vm2.outputs['deploy_vm2.export_ip.VM2_IP'] ]
-    environment: sbx
+    environment: prv
     strategy:
       runOnce:
         deploy:
