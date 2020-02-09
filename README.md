@@ -19,7 +19,7 @@
   * `var1` from Azure DevOps Variable group `ansible-deploy-common` as regular variable
   * `var2` from Azure DevOps Variable group `ansible-deploy-common` as secret variable
   * `var3` from Azure DevOps Variable group `ansible-deploy-vm*` as regular variable
-  * `var4` from Azure DevOps Variable group `ansible-release-vm*` as secret variable
+  * `var4` from Azure DevOps Variable group `ansible-deploy-vm*` as secret variable
   * `var5` **for VM2 and VM3 only:** IP address of VM1 from Azure DevOps pipeline
   * `var6` **for VM3 only:** IP address of VM2 from Azure DevOps pipeline
 
@@ -210,4 +210,4 @@ More information available in [Packer](https://www.packer.io/docs/builders/azure
 
 # Known issues
 When Packer builds Windows on Azure it falls often enough because of [WinRM timeout](https://stackoverflow.com/questions/59990155/packer-vs-vm-on-azure-timeout-waiting-for-winrm)  
-As a solution, Packer should be replaced with native [Azure Image Builder](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/image-builder)  
+As a solution, Packer is replaced with Azure CLI that can create VM, setup WinRM, execute Ansible, create image from VM  
