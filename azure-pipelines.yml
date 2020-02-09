@@ -230,7 +230,7 @@ stages:
         vm_image_rg_name: '$(prodVm2ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
         vm_image_build_rg_name: '$(prodVm2Name)-image-rg-prv$(System.PullRequest.PullRequestNumber)'
         ansible_playbook_path: ansible/$(prodVm2Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP)'
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
   - job: build_vm3
     timeoutInMinutes: 45
@@ -244,7 +244,7 @@ stages:
         vm_image_rg_name: '$(prodVm3ResourceGroupName)-prv$(System.PullRequest.PullRequestNumber)'
         vm_image_build_rg_name: '$(prodVm3Name)-image-rg-prv$(System.PullRequest.PullRequestNumber)'
         ansible_playbook_path: ansible/$(prodVm3Name)/build-playbook.yml
-        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP) var6=$(VM2_IP)'
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
 
   - deployment: deploy_vm1
     timeoutInMinutes: 45
@@ -299,7 +299,7 @@ stages:
               vm_kv_name: '$(prodVm2KvName)-prv$(System.PullRequest.PullRequestNumber)'
               vm_size: '$(prodVm2Size)'
               ansible_playbook_path: 'ansible/$(prodVm2Name)/release-playbook.yml'
-              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP)'
           - bash: |
               echo "##vso[task.setvariable variable=VM2_IP;isOutput=true]$GET_VM_IP_VM_IP"
             name: 'export_ip'
@@ -333,7 +333,7 @@ stages:
               vm_kv_name: '$(prodVm3KvName)-prv$(System.PullRequest.PullRequestNumber)'
               vm_size: '$(prodVm3Size)'
               ansible_playbook_path: 'ansible/$(prodVm3Name)/release-playbook.yml'
-              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP) var6=$(VM2_IP)'
 
   - job: cleanup_vm1
     dependsOn: deploy_vm3
