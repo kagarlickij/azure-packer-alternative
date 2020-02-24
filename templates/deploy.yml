@@ -1,0 +1,98 @@
+parameters:
+  vm_name: ''
+  vm_image_name: ''
+  vm_image_rg_name: ''
+  vm_rg_name: ''
+  vm_kv_name: ''
+  vm_size: ''
+  vm_vnet_name: ''
+  vm_vnet_rg_name: ''
+  vm_subnet_name: ''
+  ansible_playbook_path: ''
+  ansible_extra_vars: ''
+
+steps:
+- checkout: self
+  clean: true
+  persistCredentials: false
+  submodules: false
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az vm show --resource-group '${{ parameters.vm_rg_name }}' --name '${{ parameters.vm_name }}' > /dev/null 2>&1
+      if [ $? -eq 0 ]; then {
+        echo "ERROR: VM already exists, breaking.."
+        exit 1
+      } else {
+        echo "Creating VM.."
+        az vm create \
+        --resource-group '${{ parameters.vm_rg_name }}' \
+        --name '${{ parameters.vm_name }}' \
+        --image '/subscriptions/$(azureSubscriptionId)/resourceGroups/${{ parameters.vm_image_rg_name }}/providers/Microsoft.Compute/images/${{ parameters.vm_image_name }}' \
+        --location '$(vmRegion)' \
+        --size '${{ parameters.vm_size }}' \
+        --subnet '/subscriptions/$(azureSubscriptionId)/resourceGroups/${{ parameters.vm_vnet_rg_name }}/providers/Microsoft.Network/virtualNetworks/${{ parameters.vm_vnet_name }}/subnets/${{ parameters.vm_subnet_name }}' \
+        --public-ip-address '' \
+        --admin-username '$(ansibleUser)' \
+        --admin-password '$(ansibleUserPass)' \
+        --tags 'project=$(project)' 'environment=$(environment)'
+      }
+      fi
+    failOnStandardError: true
+  name: 'create_vm'
+  displayName: 'Create VM'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      VM_IP=$(az vm list-ip-addresses --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --query "[].virtualMachine.network.privateIpAddresses[]" --output tsv)
+      echo "##vso[task.setvariable variable=VM_IP;isOutput=true]$VM_IP"
+    failOnStandardError: true
+  name: 'get_vm_ip'
+  displayName: 'Get VM IP'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az vm run-command invoke --command-id RunPowerShellScript --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --scripts 'Invoke-WebRequest https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1; powershell.exe -ExecutionPolicy ByPass -File ./ConfigureRemotingForAnsible.ps1 -ForceNewSSLCert; Remove-Item ./ConfigureRemotingForAnsible.ps1'
+    failOnStandardError: true
+  name: 'setup_winrm'
+  displayName: 'Setup WinRM'
+
+- bash: |
+    if [ -z "$GET_VM_IP_VM_IP" ]; then {
+      echo "ERROR: GET_VM_IP_VM_IP variable is empty, breaking.."
+      exit 1
+    } else {
+      echo "Creating hosts file.."
+      echo -e "[all]\n$GET_VM_IP_VM_IP" > hosts
+    }
+    fi
+  name: 'create_ansible_hosts'
+  displayName: 'Create Ansible hosts file'
+
+- bash: >
+    ansible-playbook
+    -vvvv
+    -i hosts
+    ${{ parameters.ansible_playbook_path }}
+    --extra-vars='${{ parameters.ansible_extra_vars }}'
+  name: 'execute_ansible'
+  displayName: 'Run Ansible'
+
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az keyvault create --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_kv_name }} --location "$(vmRegion)" --enabled-for-disk-encryption
+      az vm encryption enable --resource-group ${{ parameters.vm_rg_name }} --name ${{ parameters.vm_name }} --disk-encryption-keyvault ${{ parameters.vm_kv_name }}
+    failOnStandardError: true
+  name: 'encrypt_vm'
+  displayName: 'Encrypt VM'

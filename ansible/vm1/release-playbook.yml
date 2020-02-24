@@ -1,0 +1,15 @@
+- hosts: all
+  vars:
+    var1:
+    var2:
+    var3:
+    var4:
+  tasks:
+  - name: file
+    win_template:
+      src: deploy_config_template.j2
+      dest: C:\deploy_config.txt
+  - name: reboot
+    win_reboot:
+  - name: ping
+    win_ping:

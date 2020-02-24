@@ -1,0 +1,17 @@
+parameters:
+  rg_name: ''
+
+steps:
+- checkout: self
+  clean: true
+  persistCredentials: false
+  submodules: false
+- task: AzureCLI@1
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az group delete --name ${{ parameters.rg_name }} --yes
+    failOnStandardError: true
+  name: 'delete_rg'
+  displayName: 'Delete Resource Group'

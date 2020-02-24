@@ -1,0 +1,378 @@
+resources:
+- repo: self
+  clean: true
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - template.json
+    - ansible/*
+
+pr:
+  autoCancel: false
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - template.json
+    - ansible/*
+    - azure-pipelines.yml
+
+variables:
+- group: azure-connection
+- group: azure-tags
+- group: azure-resources
+- group: ansible-windows-creds
+
+pool:
+  name: 'Self-Hosted-Containers'
+
+stages:
+- stage: build
+  condition: ne(variables['Build.Reason'], 'PullRequest')
+  variables:
+  - group: ansible-build-common
+  jobs:
+  - job: build_vm1
+    displayName: 'Build vm1'
+    timeoutInMinutes: 45
+    variables:
+    - group: ansible-build-vm1
+    steps:
+    - template: templates/build.yml
+      parameters:
+        vm_image_name: '$(vm1ImageName)'
+        vm_image_rg_name: '$(vmImagesResourceGroupName)'
+        vm_image_build_rg_name: '$(vm1BuildResourceGroupName)'
+        vm_source_image: '$(vmSourceImage)'
+        vm_size: '$(vm1Size)'
+        vm_build_subnet_name: '$(vmBuildVnetSubnetName)'
+        ansible_playbook_path: ansible/$(vm1Name)/build-playbook.yml
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+
+  - job: build_vm2
+    displayName: 'Build vm2'
+    timeoutInMinutes: 45
+    variables:
+    - group: ansible-build-vm2
+    steps:
+    - template: templates/build.yml
+      parameters:
+        vm_image_name: '$(vm2ImageName)'
+        vm_image_rg_name: '$(vmImagesResourceGroupName)'
+        vm_image_build_rg_name: '$(vm2BuildResourceGroupName)'
+        vm_source_image: '$(vmSourceImage)'
+        vm_size: '$(vm2Size)'
+        vm_build_subnet_name: '$(vmBuildVnetSubnetName)'
+        ansible_playbook_path: ansible/$(vm2Name)/build-playbook.yml
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+
+  - job: build_vm3
+    displayName: 'Build vm3'
+    timeoutInMinutes: 45
+    variables:
+    - group: ansible-build-vm3
+    steps:
+    - template: templates/build.yml
+      parameters:
+        vm_image_name: '$(vm3ImageName)'
+        vm_image_rg_name: '$(vmImagesResourceGroupName)'
+        vm_image_build_rg_name: '$(vm3BuildResourceGroupName)'
+        vm_source_image: '$(vmSourceImage)'
+        vm_size: '$(vm3Size)'
+        vm_build_subnet_name: '$(vmBuildVnetSubnetName)'
+        ansible_playbook_path: ansible/$(vm3Name)/build-playbook.yml
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+
+
+- stage: deploy
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  dependsOn:
+  - build
+  variables:
+  - group: ansible-deploy-common
+  jobs:
+  - deployment: deploy_vm1
+    displayName: 'Deploy vm1'
+    timeoutInMinutes: 45
+    variables:
+    - group: ansible-deploy-vm1
+    environment: prod
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: templates/deploy.yml
+            parameters:
+              vm_name: '$(vm1Name)'
+              vm_image_name: '$(vm1ImageName)'
+              vm_image_rg_name: '$(vmImagesResourceGroupName)'
+              vm_rg_name: '$(vmResourceGroupName)'
+              vm_kv_name: '$(vm1KeyVaultName)'
+              vm_size: '$(vm1Size)'
+              vm_vnet_name: '$(vmVnetName)'
+              vm_vnet_rg_name: '$(vmVnetResourceGroupName)'
+              vm_subnet_name: '$(vmVnetSubnetName)'
+              ansible_playbook_path: 'ansible/$(vm1Name)/release-playbook.yml'
+              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+          - bash: |
+              echo "##vso[task.setvariable variable=VM1_IP;isOutput=true]$GET_VM_IP_VM_IP"
+            name: 'export_ip'
+            displayName: 'Export VM1 IP address'
+
+  - deployment: deploy_vm2
+    displayName: 'Deploy vm2'
+    timeoutInMinutes: 45
+    dependsOn:
+    - deploy_vm1
+    condition: succeeded()
+    variables:
+    - group: ansible-deploy-vm2
+    - name: VM1_IP
+      value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+    environment: prod
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: templates/deploy.yml
+            parameters:
+              vm_name: '$(vm2Name)'
+              vm_image_name: '$(vm2ImageName)'
+              vm_image_rg_name: '$(vmImagesResourceGroupName)'
+              vm_rg_name: '$(vmResourceGroupName)'
+              vm_kv_name: '$(vm2KeyVaultName)'
+              vm_size: '$(vm2Size)'
+              vm_vnet_name: '$(vmVnetName)'
+              vm_vnet_rg_name: '$(vmVnetResourceGroupName)'
+              vm_subnet_name: '$(vmVnetSubnetName)'
+              ansible_playbook_path: 'ansible/$(vm2Name)/release-playbook.yml'
+              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP)'
+          - bash: |
+              echo "##vso[task.setvariable variable=VM2_IP;isOutput=true]$GET_VM_IP_VM_IP"
+            name: 'export_ip'
+            displayName: 'Export VM2 IP address'
+
+  - deployment: deploy_vm3
+    displayName: 'Deploy vm3'
+    timeoutInMinutes: 45
+    dependsOn:
+    - deploy_vm1
+    - deploy_vm2
+    condition: succeeded()
+    variables:
+    - group: ansible-deploy-vm3
+    - name: VM1_IP
+      value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+    - name: VM2_IP
+      value: $[ dependencies.deploy_vm2.outputs['deploy_vm2.export_ip.VM2_IP'] ]
+    environment: prod
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: templates/deploy.yml
+            parameters:
+              vm_name: '$(vm3Name)'
+              vm_image_name: '$(vm3ImageName)'
+              vm_image_rg_name: '$(vmImagesResourceGroupName)'
+              vm_rg_name: '$(vmResourceGroupName)'
+              vm_kv_name: '$(vm3KeyVaultName)'
+              vm_size: '$(vm3Size)'
+              vm_vnet_name: '$(vmVnetName)'
+              vm_vnet_rg_name: '$(vmVnetResourceGroupName)'
+              vm_subnet_name: '$(vmVnetSubnetName)'
+              ansible_playbook_path: 'ansible/$(vm3Name)/release-playbook.yml'
+              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP) var6=$(VM2_IP)'
+
+
+
+- stage: prv
+  condition: eq(variables['System.PullRequest.TargetBranch'], 'master')
+  jobs:
+  - job: create_prv_deploy_rg
+    displayName: 'Create tmp resource group for prv deploy'
+    timeoutInMinutes: 10
+    steps:
+    - template: templates/prepare.yml
+      parameters:
+        rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+
+  - job: build_vm1
+    displayName: 'Build vm1'
+    timeoutInMinutes: 45
+    dependsOn:
+    - create_prv_deploy_rg
+    variables:
+    - group: ansible-build-common
+    - group: ansible-build-vm1
+    steps:
+    - template: templates/build.yml
+      parameters:
+        vm_image_name: '$(vm1ImageName)'
+        vm_image_rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+        vm_image_build_rg_name: '$(vm1Name)-prv-$(System.PullRequest.PullRequestNumber)-rg'
+        vm_source_image: '$(vmSourceImage)'
+        vm_size: '$(vm1Size)'
+        vm_build_subnet_name: '$(vmBuildPrvVnetSubnetName)'
+        ansible_playbook_path: ansible/$(vm1Name)/build-playbook.yml
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+
+  - job: build_vm2
+    displayName: 'Build vm2'
+    timeoutInMinutes: 45
+    dependsOn:
+    - create_prv_deploy_rg
+    variables:
+    - group: ansible-build-common
+    - group: ansible-build-vm2
+    steps:
+    - template: templates/build.yml
+      parameters:
+        vm_image_name: '$(vm2ImageName)'
+        vm_image_rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+        vm_image_build_rg_name: '$(vm2Name)-prv-$(System.PullRequest.PullRequestNumber)-rg'
+        vm_source_image: '$(vmSourceImage)'
+        vm_size: '$(vm2Size)'
+        vm_build_subnet_name: '$(vmBuildPrvVnetSubnetName)'
+        ansible_playbook_path: ansible/$(vm2Name)/build-playbook.yml
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+
+  - job: build_vm3
+    displayName: 'Build vm3'
+    timeoutInMinutes: 45
+    dependsOn:
+    - create_prv_deploy_rg
+    variables:
+    - group: ansible-build-common
+    - group: ansible-build-vm3
+    steps:
+    - template: templates/build.yml
+      parameters:
+        vm_image_name: '$(vm3ImageName)'
+        vm_image_rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+        vm_image_build_rg_name: '$(vm3Name)-prv-$(System.PullRequest.PullRequestNumber)-rg'
+        vm_source_image: '$(vmSourceImage)'
+        vm_size: '$(vm2Size)'
+        vm_build_subnet_name: '$(vmBuildPrvVnetSubnetName)'
+        ansible_playbook_path: ansible/$(vm3Name)/build-playbook.yml
+        ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+
+  - deployment: deploy_vm1
+    displayName: 'Deploy vm1'
+    timeoutInMinutes: 45
+    dependsOn:
+    - build_vm1
+    - create_prv_deploy_rg
+    condition: succeeded()
+    variables:
+    - group: ansible-deploy-common
+    - group: ansible-deploy-vm1
+    environment: prv
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: templates/deploy.yml
+            parameters:
+              vm_name: '$(vm1Name)'
+              vm_image_name: '$(vm1ImageName)'
+              vm_image_rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+              vm_rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+              vm_kv_name: '$(vm1KeyVaultName)'
+              vm_size: '$(vm1Size)'
+              vm_vnet_name: '$(vmBuildVnetName)'
+              vm_vnet_rg_name: '$(vmBuildVnetResourceGroupName)'
+              vm_subnet_name: '$(vmBuildPrvVnetSubnetName)'
+              ansible_playbook_path: 'ansible/$(vm1Name)/release-playbook.yml'
+              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4)'
+          - bash: |
+              echo "##vso[task.setvariable variable=VM1_IP;isOutput=true]$GET_VM_IP_VM_IP"
+            name: 'export_ip'
+            displayName: 'Export VM1 IP address'
+
+  - deployment: deploy_vm2
+    displayName: 'Deploy vm2'
+    timeoutInMinutes: 30
+    dependsOn:
+    - build_vm2
+    - deploy_vm1
+    - create_prv_deploy_rg
+    condition: succeeded()
+    variables:
+    - group: ansible-deploy-common
+    - group: ansible-deploy-vm2
+    - name: VM1_IP
+      value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+    environment: prv
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: templates/deploy.yml
+            parameters:
+              vm_name: '$(vm2Name)'
+              vm_image_name: '$(vm2ImageName)'
+              vm_image_rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+              vm_rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+              vm_kv_name: '$(vm2KeyVaultName)'
+              vm_size: '$(vm2Size)'
+              vm_vnet_name: '$(vmBuildVnetName)'
+              vm_vnet_rg_name: '$(vmBuildVnetResourceGroupName)'
+              vm_subnet_name: '$(vmBuildPrvVnetSubnetName)'
+              ansible_playbook_path: 'ansible/$(vm2Name)/release-playbook.yml'
+              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP)'
+          - bash: |
+              echo "##vso[task.setvariable variable=VM2_IP;isOutput=true]$GET_VM_IP_VM_IP"
+            name: 'export_ip'
+            displayName: 'Export VM2 IP address'
+
+  - deployment: deploy_vm3
+    displayName: 'Deploy vm3'
+    timeoutInMinutes: 30
+    dependsOn:
+    - build_vm3
+    - deploy_vm1
+    - deploy_vm2
+    - create_prv_deploy_rg
+    condition: succeeded()
+    variables:
+    - group: ansible-deploy-vm3
+    - group: ansible-deploy-common
+    - name: VM1_IP
+      value: $[ dependencies.deploy_vm1.outputs['deploy_vm1.export_ip.VM1_IP'] ]
+    - name: VM2_IP
+      value: $[ dependencies.deploy_vm2.outputs['deploy_vm2.export_ip.VM2_IP'] ]
+    environment: prv
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: templates/deploy.yml
+            parameters:
+              vm_name: '$(vm3Name)'
+              vm_image_name: '$(vm3ImageName)'
+              vm_image_rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+              vm_rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'
+              vm_kv_name: '$(vm3KeyVaultName)'
+              vm_size: '$(vm3Size)'
+              vm_vnet_name: '$(vmBuildVnetName)'
+              vm_vnet_rg_name: '$(vmBuildVnetResourceGroupName)'
+              vm_subnet_name: '$(vmBuildPrvVnetSubnetName)'
+              ansible_playbook_path: 'ansible/$(vm3Name)/release-playbook.yml'
+              ansible_extra_vars: 'ansible_user=$(ansibleUser) ansible_password=$(ansibleUserPass) ansible_connection=winrm ansible_winrm_server_cert_validation=ignore var1=$(var1) var2=$(var2) var3=$(var3) var4=$(var4) var5=$(VM1_IP) var6=$(VM2_IP)'
+
+  - job: delete_prv_deploy_rg
+    displayName: 'Delete tmp resource group for prv deploy'
+    dependsOn: deploy_vm3
+    condition: succeeded()
+    timeoutInMinutes: 30
+    steps:
+    - template: templates/cleanup.yml
+      parameters:
+        rg_name: 'vm-prv-$(System.PullRequest.PullRequestNumber)-rg'

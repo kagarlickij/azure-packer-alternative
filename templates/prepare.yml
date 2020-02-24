@@ -1,0 +1,18 @@
+parameters:
+  rg_name: ''
+
+steps:
+- checkout: self
+  clean: true
+  persistCredentials: false
+  submodules: false
+- task: AzureCLI@1
+  condition: succeeded()
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptLocation: inlineScript
+    inlineScript: |
+      az group create --name '${{ parameters.rg_name }}' --location '$(vmRegion)'
+    failOnStandardError: true
+  name: 'create_rg'
+  displayName: 'Create Resource Group'
